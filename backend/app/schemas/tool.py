@@ -1,4 +1,4 @@
-"""AI Skills Hub — 技能 Schema"""
+"""AI Tools Hub — 工具 Schema"""
 import uuid
 from datetime import datetime
 from decimal import Decimal
@@ -9,13 +9,13 @@ from pydantic import BaseModel, Field
 from app.schemas.category import CategoryBrief
 
 
-class SkillList(BaseModel):
-    """技能列表项（不含 detail 等大字段）"""
+class ToolList(BaseModel):
+    """工具列表项（不含 detail 等大字段）"""
     id: uuid.UUID
     name: str
     slug: str
     description: str
-    skill_type: str
+    tool_type: str
     category: Optional[CategoryBrief] = None
     tags: List[str] = Field(default_factory=list)
     author: Optional[str] = None
@@ -31,14 +31,14 @@ class SkillList(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class SkillDetail(BaseModel):
-    """技能详情（完整信息）"""
+class ToolDetail(BaseModel):
+    """工具详情（完整信息）"""
     id: uuid.UUID
     name: str
     slug: str
     description: str
     detail: Optional[str] = None
-    skill_type: str
+    tool_type: str
     category: Optional[CategoryBrief] = None
     platforms: List[str] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)

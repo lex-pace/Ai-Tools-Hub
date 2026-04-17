@@ -1,4 +1,4 @@
-"""AI Skills Hub — 依赖注入：数据库会话、ES 客户端、Redis 客户端"""
+"""AI Tools Hub — 依赖注入：数据库会话、ES 客户端、Redis 客户端"""
 from typing import AsyncGenerator
 
 from elasticsearch import AsyncElasticsearch

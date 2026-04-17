@@ -1,4 +1,4 @@
-"""AI Skills Hub — 评价模型（对应 reviews 表）"""
+"""AI Tools Hub — 评价模型（对应 reviews 表）"""
 import uuid
 from datetime import datetime
 from typing import Optional
@@ -12,7 +12,7 @@ from app.core.database import Base
 
 
 class Review(Base):
-    """评价表 — 用户对技能的评分与评论"""
+    """评价表 — 用户对工具的评分与评论"""
 
     __tablename__ = "reviews"
 
@@ -30,11 +30,11 @@ class Review(Base):
         nullable=False,
         comment="用户 ID",
     )
-    skill_id: Mapped[uuid.UUID] = mapped_column(
+    tool_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("skills.id", ondelete="CASCADE"),
+        ForeignKey("tools.id", ondelete="CASCADE"),
         nullable=False,
-        comment="技能 ID",
+        comment="工具 ID",
     )
 
     # ── 评价内容 ──────────────────────────────────────
@@ -51,14 +51,14 @@ class Review(Base):
 
     # ── 关系 ──────────────────────────────────────────
     user: Mapped["User"] = relationship("User", back_populates="reviews", lazy="selectin")
-    skill: Mapped["Skill"] = relationship("Skill", back_populates="reviews", lazy="selectin")
+    tool: Mapped["Tool"] = relationship("Tool", back_populates="reviews", lazy="selectin")
 
     # ── 约束与索引 ────────────────────────────────────
     __table_args__ = (
-        UniqueConstraint("user_id", "skill_id", name="uq_review_user_skill"),
+        UniqueConstraint("user_id", "tool_id", name="uq_review_user_tool"),
         CheckConstraint("rating >= 1 AND rating <= 5", name="ck_review_rating_range"),
-        Index("idx_reviews_skill", "skill_id"),
+        Index("idx_reviews_tool", "tool_id"),
     )
 
     def __repr__(self) -> str:
-        return f"<Review user={self.user_id} skill={self.skill_id} rating={self.rating}>"
+        return f"<Review user={self.user_id} tool={self.tool_id} rating={self.rating}>"

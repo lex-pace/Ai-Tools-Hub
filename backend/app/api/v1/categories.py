@@ -1,4 +1,4 @@
-"""AI Skills Hub — 分类 CRUD 端点"""
+"""AI Tools Hub — 分类 CRUD 端点"""
 import uuid
 import logging
 from typing import Optional

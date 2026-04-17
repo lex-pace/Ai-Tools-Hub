@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-# AI Skills Hub — 一键启动脚本
+# AI Tools Hub — 一键启动脚本
 # 支持 DOCKER_HOST 环境变量，兼容远程 Docker 场景
 # ============================================================
 set -e
@@ -16,7 +16,7 @@ warn()  { echo -e "${YELLOW}[WARN]${NC}  $*"; }
 error() { echo -e "${RED}[ERROR]${NC} $*"; }
 
 echo "================================"
-echo "  AI Skills Hub — 容器化部署"
+echo "  AI Tools Hub — 容器化部署"
 echo "================================"
 echo ""
 
@@ -108,9 +108,9 @@ wait_for_healthy() {
     return 1
 }
 
-wait_for_healthy "skills-postgres"      "PostgreSQL"
-wait_for_healthy "skills-redis"         "Redis"
-wait_for_healthy "skills-elasticsearch" "Elasticsearch"
+wait_for_healthy "tools-postgres"      "PostgreSQL"
+wait_for_healthy "tools-redis"         "Redis"
+wait_for_healthy "tools-elasticsearch" "Elasticsearch"
 
 # 等待后端就绪
 echo ""
@@ -160,7 +160,7 @@ echo "  后端 API:        http://localhost:8000"
 echo "  API 文档:        http://localhost:8000/docs"
 echo "  ReDoc 文档:      http://localhost:8000/redoc"
 echo ""
-echo "  PostgreSQL:      localhost:15432 (skills/skills123)"
+echo "  PostgreSQL:      localhost:15432 (tools/tools123)"
 echo "  Elasticsearch:   http://localhost:19200"
 echo "  Redis:           localhost:16379"
 echo ""

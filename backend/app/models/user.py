@@ -1,4 +1,4 @@
-"""AI Skills Hub — 用户模型（对应 users 表）"""
+"""AI Tools Hub — 用户模型（对应 users 表）"""
 import uuid
 from datetime import datetime
 from typing import Optional, Any

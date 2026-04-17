@@ -1,5 +1,5 @@
 # ============================================================
-# AI Skills Hub — Docker Compose 开发环境
+# AI Tools Hub — Docker Compose 开发环境
 # 用法: docker compose up -d
 #
 # 端口规划（避免与宿主机已有服务冲突）:
@@ -18,12 +18,12 @@ services:
   # ==================== PostgreSQL ====================
   postgres:
     image: postgres:16-alpine
-    container_name: skills-postgres
+    container_name: tools-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: skills
-      POSTGRES_PASSWORD: skills123
-      POSTGRES_DB: skills_hub
+      POSTGRES_USER: tools
+      POSTGRES_PASSWORD: tools123
+      POSTGRES_DB: tools_hub
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
       - ./backend/init.sql:/docker-entrypoint-initdb.d/01-init.sql
@@ -41,19 +41,19 @@ services:
       -c work_mem=4MB
       -c maintenance_work_mem=64MB
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U skills -d skills_hub"]
+      test: ["CMD-SHELL", "pg_isready -U tools -d tools_hub"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - skills-net
+      - tools-net
 
   # ==================== Elasticsearch (含 IK 中文分词) ====================
   elasticsearch:
     build:
       context: ./elasticsearch
       dockerfile: Dockerfile
-    container_name: skills-elasticsearch
+    container_name: tools-elasticsearch
     restart: unless-stopped
     environment:
       - discovery.type=single-node
@@ -61,7 +61,7 @@ services:
       - xpack.security.http.ssl.enabled=false
       - xpack.ml.enabled=false
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - cluster.name=skills-hub
+      - cluster.name=tools-hub
       - bootstrap.memory_lock=true
     ulimits:
       memlock:
@@ -82,12 +82,12 @@ services:
       retries: 10
       start_period: 30s
     networks:
-      - skills-net
+      - tools-net
 
   # ==================== Redis ====================
   redis:
     image: redis:7-alpine
-    container_name: skills-redis
+    container_name: tools-redis
     restart: unless-stopped
     command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --save 60 1000 --appendonly yes
     volumes:
@@ -104,21 +104,21 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - skills-net
+      - tools-net
 
   # ==================== 后端 API (FastAPI) ====================
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: skills-backend
+    container_name: tools-backend
     restart: unless-stopped
     env_file:
       - .env
     environment:
       - APP_MODE=docker
-      - DATABASE_URL=postgresql+asyncpg://skills:skills123@postgres:5432/skills_hub
-      - SYNC_DATABASE_URL=postgresql://skills:skills123@postgres:5432/skills_hub
+      - DATABASE_URL=postgresql+asyncpg://tools:tools123@postgres:5432/tools_hub
+      - SYNC_DATABASE_URL=postgresql://tools:tools123@postgres:5432/tools_hub
       - REDIS_URL=redis://redis:6379/0
       - ELASTICSEARCH_URL=http://elasticsearch:9200
       - CHROMA_PERSIST_DIR=/app/data/chroma
@@ -153,16 +153,16 @@ services:
         python -c '
         import asyncio
         from app.core.database import async_session_factory
-        from app.services.es_service import ensure_skills_index, bulk_index_skills
-        from app.models.skill import Skill
+        from app.services.es_service import ensure_tools_index, bulk_index_tools
+        from app.models.tool import Tool
         from sqlalchemy import select
         async def sync():
-            await ensure_skills_index()
+            await ensure_tools_index()
             async with async_session_factory() as db:
-                result = await db.execute(select(Skill).where(Skill.status == \"active\"))
-                skills = result.scalars().all()
-                if skills:
-                    count = await bulk_index_skills(skills)
+                result = await db.execute(select(Tool).where(Tool.status == \"active\"))
+                tools = result.scalars().all()
+                if tools:
+                    count = await bulk_index_tools(tools)
                     print(f\"ES 同步完成: {count} 条\")
         asyncio.run(sync())
         ' 2>/dev/null || echo 'ES 同步跳过' &&
@@ -170,14 +170,14 @@ services:
         uvicorn app.main:app --host 0.0.0.0 --port 8000 --log-level info
       "
     networks:
-      - skills-net
+      - tools-net
 
   # ==================== 前端 (Next.js) ====================
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: skills-frontend
+    container_name: tools-frontend
     restart: unless-stopped
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
@@ -200,12 +200,12 @@ services:
         limits:
           memory: 512M
     networks:
-      - skills-net
+      - tools-net
 
   # ==================== Nginx 反向代理 ====================
   nginx:
     image: nginx:alpine
-    container_name: skills-nginx
+    container_name: tools-nginx
     restart: unless-stopped
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
@@ -220,8 +220,8 @@ services:
         limits:
           memory: 64M
     networks:
-      - skills-net
+      - tools-net
 
 networks:
-  skills-net:
+  tools-net:
     driver: bridge

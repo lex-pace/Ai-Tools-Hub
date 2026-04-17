@@ -4,19 +4,19 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Heart, Trash2, ArrowLeft, AlertCircle, Loader2, LogIn } from "lucide-react";
-import SkillCard from "@/components/home/SkillCard";
+import ToolCard from "@/components/home/ToolCard";
 import { useAuthStore } from "@/store/authStore";
-import { favoriteApi, getFavorites as getLocalFavorites, removeFavorite as removeLocalFavorite, getSkillDetail } from "@/lib/api";
-import type { Skill } from "@/lib/types";
+import { favoriteApi, getFavorites as getLocalFavorites, removeFavorite as removeLocalFavorite, getToolDetail } from "@/lib/api";
+import type { Tool } from "@/lib/types";
 
-// 将后端 SkillList 转换为前端 Skill 类型
-function mapSkillFromApi(item: any): Skill {
+// 将后端 ToolList 转换为前端 Tool 类型
+function mapToolFromApi(item: any): Tool {
   return {
     id: item.id,
     name: item.name,
     description: item.description || "",
     detail: item.detail || "",
-    type: item.skill_type || item.type || "tool",
+    type: item.tool_type || item.type || "tool",
     platform: item.platforms?.[0] || "general",
     category: item.category || { id: "", name: "", slug: "" },
     tags: item.tags || [],
@@ -34,7 +34,7 @@ function mapSkillFromApi(item: any): Skill {
 export default function FavoritesPage() {
   const router = useRouter();
   const { isAuthenticated, loading: authLoading, checkAuth } = useAuthStore();
-  const [favoriteSkills, setFavoriteSkills] = useState<Skill[]>([]);
+  const [favoriteTools, setFavoriteTools] = useState<Tool[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
@@ -48,17 +48,17 @@ export default function FavoritesPage() {
       if (isAuthenticated) {
         const res = await favoriteApi.getList(pageNum, 12);
         const body = res.data;
-        // 后端返回 { code, data: [SkillList...], pagination: { page, size, total, pages } }
+        // 后端返回 { code, data: [ToolList...], pagination: { page, size, total, pages } }
         const items = Array.isArray(body?.data) ? body.data : [];
         const pag = body?.pagination || {};
-        setFavoriteSkills(items.map((item: any) => mapSkillFromApi(item)));
+        setFavoriteTools(items.map((item: any) => mapToolFromApi(item)));
         setTotalPages(pag.pages || 1);
         setPage(pag.page || 1);
       } else {
         const ids = getLocalFavorites();
-        if (ids.length === 0) { setFavoriteSkills([]); setLoading(false); return; }
-        const results = await Promise.allSettled(ids.map((id) => getSkillDetail(id)));
-        setFavoriteSkills(results.filter((r): r is PromiseFulfilledResult<Skill> => r.status === "fulfilled").map((r) => r.value));
+        if (ids.length === 0) { setFavoriteTools([]); setLoading(false); return; }
+        const results = await Promise.allSettled(ids.map((id) => getToolDetail(id)));
+        setFavoriteTools(results.filter((r): r is PromiseFulfilledResult<Tool> => r.status === "fulfilled").map((r) => r.value));
         setTotalPages(1);
       }
     } catch (err) { setError("加载收藏列表失败"); }
@@ -67,10 +67,10 @@ export default function FavoritesPage() {
 
   useEffect(() => { if (!authLoading) loadFavorites(page); }, [authLoading, isAuthenticated, page, loadFavorites]);
 
-  const handleRemove = async (skillId: string) => {
+  const handleRemove = async (toolId: string) => {
     try {
-      if (isAuthenticated) await favoriteApi.remove(skillId); else removeLocalFavorite(skillId);
-      setFavoriteSkills((prev) => prev.filter((s) => s.id !== skillId));
+      if (isAuthenticated) await favoriteApi.remove(toolId); else removeLocalFavorite(toolId);
+      setFavoriteTools((prev) => prev.filter((s) => s.id !== toolId));
       window.dispatchEvent(new Event("favorites-changed"));
     } catch (err) { console.error("Failed to remove:", err); }
   };
@@ -109,20 +109,20 @@ export default function FavoritesPage() {
           <p className="mb-3" style={{ color: "var(--text-mid)" }}>{error}</p>
           <button onClick={() => loadFavorites(page)} className="neon-btn px-4 py-2 text-sm">重新加载</button>
         </div>
-      ) : favoriteSkills.length === 0 ? (
+      ) : favoriteTools.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl py-20" style={{ border: "1px dashed var(--glass-border)" }}>
           <Heart className="mb-4 w-12 h-12" style={{ color: "var(--text-lo)", opacity: 0.3 }} />
           <h3 className="mb-2 text-lg font-medium">还没有收藏</h3>
-          <p className="mb-6 text-sm" style={{ color: "var(--text-lo)" }}>浏览技能时点击收藏按钮，即可在这里查看</p>
+          <p className="mb-6 text-sm" style={{ color: "var(--text-lo)" }}>浏览工具时点击收藏按钮，即可在这里查看</p>
           <Link href="/"><button className="neon-btn px-5 py-2.5 text-sm"><ArrowLeft className="w-4 h-4 inline mr-2" />去发现工具</button></Link>
         </div>
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {favoriteSkills.map((skill) => (
-              <div key={skill.id} className="relative">
-                <SkillCard skill={skill} />
-                <button onClick={() => handleRemove(skill.id)} className="absolute right-3 top-3 z-10 w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-all hover:text-[var(--magenta)]" style={{ background: "var(--glass)", border: "1px solid var(--glass-border)", color: "var(--text-lo)", backdropFilter: "blur(10px)" }} aria-label="取消收藏">
+            {favoriteTools.map((tool) => (
+              <div key={tool.id} className="relative">
+                <ToolCard tool={tool} />
+                <button onClick={() => handleRemove(tool.id)} className="absolute right-3 top-3 z-10 w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer transition-all hover:text-[var(--magenta)]" style={{ background: "var(--glass)", border: "1px solid var(--glass-border)", color: "var(--text-lo)", backdropFilter: "blur(10px)" }} aria-label="取消收藏">
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>

@@ -1,5 +1,5 @@
 # ============================================================
-# AI Skills Hub — 基础设施组件（不含前后端服务）
+# AI Tools Hub — 基础设施组件（不含前后端服务）
 # 用法: DOCKER_HOST= docker compose -f docker-compose.infra.yml up -d
 #
 # 端口规划（避免与宿主机已有服务冲突）:
@@ -14,12 +14,12 @@ services:
   # ==================== PostgreSQL ====================
   postgres:
     image: postgres:16-alpine
-    container_name: skills-postgres
+    container_name: tools-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: skills
-      POSTGRES_PASSWORD: skills123
-      POSTGRES_DB: skills_hub
+      POSTGRES_USER: tools
+      POSTGRES_PASSWORD: tools123
+      POSTGRES_DB: tools_hub
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/01-init.sql
@@ -37,19 +37,19 @@ services:
       -c work_mem=4MB
       -c maintenance_work_mem=64MB
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U skills -d skills_hub"]
+      test: ["CMD-SHELL", "pg_isready -U tools -d tools_hub"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - skills-net
+      - tools-net
 
   # ==================== Elasticsearch (含 IK 中文分词) ====================
   elasticsearch:
     build:
       context: ./elasticsearch
       dockerfile: Dockerfile
-    container_name: skills-elasticsearch
+    container_name: tools-elasticsearch
     restart: unless-stopped
     environment:
       - discovery.type=single-node
@@ -57,7 +57,7 @@ services:
       - xpack.security.http.ssl.enabled=false
       - xpack.ml.enabled=false
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - cluster.name=skills-hub
+      - cluster.name=tools-hub
       - bootstrap.memory_lock=true
     ulimits:
       memlock:
@@ -78,12 +78,12 @@ services:
       retries: 10
       start_period: 30s
     networks:
-      - skills-net
+      - tools-net
 
   # ==================== Redis ====================
   redis:
     image: redis:7-alpine
-    container_name: skills-redis
+    container_name: tools-redis
     restart: unless-stopped
     command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --save 60 1000 --appendonly yes
     volumes:
@@ -100,12 +100,12 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - skills-net
+      - tools-net
 
   # ==================== Nginx 反向代理 ====================
   nginx:
     image: nginx:alpine
-    container_name: skills-nginx
+    container_name: tools-nginx
     restart: unless-stopped
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
@@ -117,8 +117,8 @@ services:
         limits:
           memory: 64M
     networks:
-      - skills-net
+      - tools-net
 
 networks:
-  skills-net:
+  tools-net:
     driver: bridge

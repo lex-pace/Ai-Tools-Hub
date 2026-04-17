@@ -1,10 +1,10 @@
 #!/bin/bash
-# AI Skills Hub — 本地启动前端
+# AI Tools Hub — 本地启动前端
 # 用法: cd frontend && bash run.sh
 
 set -e
 
-echo "=== AI Skills Hub 前端启动 ==="
+echo "=== AI Tools Hub 前端启动 ==="
 
 # 检查 Node.js
 if ! command -v node &> /dev/null; then

@@ -1,4 +1,4 @@
-"""AI Skills Hub — 搜索日志模型（对应 search_logs 表）"""
+"""AI Tools Hub — 搜索日志模型（对应 search_logs 表）"""
 import uuid
 from datetime import datetime
 from typing import Optional, Any

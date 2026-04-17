@@ -12,7 +12,7 @@ from app.core.deps import get_db
 from app.core.auth import get_current_user
 from app.models.user import User
 from app.models.review import Review
-from app.models.skill import Skill
+from app.models.tool import Tool
 from app.schemas.common import ResponseBase, ResponseWithPagination, PaginationOut
 from app.schemas.user import UserOut
 
@@ -23,7 +23,7 @@ class ReviewOut(BaseModel):
     """评价输出"""
     id: uuid.UUID
     user: UserOut
-    skill_id: uuid.UUID
+    tool_id: uuid.UUID
     rating: int
     comment: Optional[str] = None
     created_at: Optional[datetime] = None
@@ -45,31 +45,31 @@ class ReviewUpdate(BaseModel):
 
 
 @router.get(
-    "/{skill_id}/reviews",
+    "/{tool_id}/reviews",
     response_model=ResponseWithPagination[ReviewOut],
-    summary="获取技能的评价列表",
+    summary="获取工具的评价列表",
 )
 async def get_reviews(
-    skill_id: uuid.UUID,
+    tool_id: uuid.UUID,
     page: int = Query(default=1, ge=1, description="页码"),
     size: int = Query(default=20, ge=1, le=100, description="每页数量"),
     db: AsyncSession = Depends(get_db),
 ):
     """
-    获取指定技能的评价列表（分页）
+    获取指定工具的评价列表（分页）
 
     - 不需要登录
     """
-    # 检查技能是否存在
-    skill_stmt = select(Skill).where(Skill.id == skill_id)
-    skill_result = await db.execute(skill_stmt)
-    if skill_result.scalar_one_or_none() is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="技能不存在")
+    # 检查工具是否存在
+    tool_stmt = select(Tool).where(Tool.id == tool_id)
+    tool_result = await db.execute(tool_stmt)
+    if tool_result.scalar_one_or_none() is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="工具不存在")
 
     # 查询评价
     stmt = (
         select(Review)
-        .where(Review.skill_id == skill_id)
+        .where(Review.tool_id == tool_id)
         .order_by(Review.created_at.desc())
     )
 
@@ -88,7 +88,7 @@ async def get_reviews(
         ReviewOut(
             id=r.id,
             user=UserOut.model_validate(r.user),
-            skill_id=r.skill_id,
+            tool_id=r.tool_id,
             rating=r.rating,
             comment=r.comment,
             created_at=r.created_at,
@@ -102,45 +102,45 @@ async def get_reviews(
 
 
 @router.post(
-    "/{skill_id}/reviews",
+    "/{tool_id}/reviews",
     response_model=ResponseBase[ReviewOut],
     summary="发表评价",
 )
 async def create_review(
-    skill_id: uuid.UUID,
+    tool_id: uuid.UUID,
     rating: int = Query(..., ge=1, le=5, description="评分 1~5"),
     comment: Optional[str] = Query(default=None, description="评论内容"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """
-    对技能发表评价
+    对工具发表评价
 
     - 需要登录
-    - 每个用户每个技能只能评价一次
+    - 每个用户每个工具只能评价一次
     """
-    # 检查技能是否存在
-    skill_stmt = select(Skill).where(Skill.id == skill_id)
-    skill_result = await db.execute(skill_stmt)
-    if skill_result.scalar_one_or_none() is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="技能不存在")
+    # 检查工具是否存在
+    tool_stmt = select(Tool).where(Tool.id == tool_id)
+    tool_result = await db.execute(tool_stmt)
+    if tool_result.scalar_one_or_none() is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="工具不存在")
 
     # 检查是否已评价
     existing_stmt = select(Review).where(
         Review.user_id == current_user.id,
-        Review.skill_id == skill_id,
+        Review.tool_id == tool_id,
     )
     existing_result = await db.execute(existing_stmt)
     if existing_result.scalar_one_or_none() is not None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="您已评价过该技能，请使用修改接口更新评价",
+            detail="您已评价过该工具，请使用修改接口更新评价",
         )
 
     # 创建评价
     review = Review(
         user_id=current_user.id,
-        skill_id=skill_id,
+        tool_id=tool_id,
         rating=rating,
         comment=comment,
     )
@@ -154,7 +154,7 @@ async def create_review(
         data=ReviewOut(
             id=review.id,
             user=UserOut.model_validate(current_user),
-            skill_id=review.skill_id,
+            tool_id=review.tool_id,
             rating=review.rating,
             comment=review.comment,
             created_at=review.created_at,
@@ -165,19 +165,19 @@ async def create_review(
 
 
 @router.put(
-    "/{skill_id}/reviews",
+    "/{tool_id}/reviews",
     response_model=ResponseBase[ReviewOut],
     summary="修改评价",
 )
 async def update_review(
-    skill_id: uuid.UUID,
+    tool_id: uuid.UUID,
     rating: Optional[int] = Query(default=None, ge=1, le=5, description="评分 1~5"),
     comment: Optional[str] = Query(default=None, description="评论内容"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """
-    修改对技能的评价
+    修改对工具的评价
 
     - 需要登录
     - 只能修改自己的评价
@@ -185,7 +185,7 @@ async def update_review(
     # 查找已有评价
     stmt = select(Review).where(
         Review.user_id == current_user.id,
-        Review.skill_id == skill_id,
+        Review.tool_id == tool_id,
     )
     result = await db.execute(stmt)
     review = result.scalar_one_or_none()
@@ -212,7 +212,7 @@ async def update_review(
         data=ReviewOut(
             id=review.id,
             user=UserOut.model_validate(current_user),
-            skill_id=review.skill_id,
+            tool_id=review.tool_id,
             rating=review.rating,
             comment=review.comment,
             created_at=review.created_at,
@@ -223,17 +223,17 @@ async def update_review(
 
 
 @router.delete(
-    "/{skill_id}/reviews",
+    "/{tool_id}/reviews",
     response_model=ResponseBase,
     summary="删除评价",
 )
 async def delete_review(
-    skill_id: uuid.UUID,
+    tool_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """
-    删除对技能的评价
+    删除对工具的评价
 
     - 需要登录
     - 只能删除自己的评价
@@ -241,7 +241,7 @@ async def delete_review(
     # 查找已有评价
     stmt = select(Review).where(
         Review.user_id == current_user.id,
-        Review.skill_id == skill_id,
+        Review.tool_id == tool_id,
     )
     result = await db.execute(stmt)
     review = result.scalar_one_or_none()

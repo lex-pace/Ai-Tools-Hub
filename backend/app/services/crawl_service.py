@@ -9,12 +9,12 @@ from typing import Optional
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.skill import Skill
+from app.models.tool import Tool
 from app.models.category import Category
 from app.models.crawl_task import CrawlTask
 from app.crawlers.base import CrawlResult
 from app.crawlers.factory import get_crawler, get_all_crawlers
-from app.services.es_service import index_skill
+from app.services.es_service import index_tool
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +146,7 @@ async def crawl_and_save(
 
     对每条结果：
     1. 检查是否已存在（by source + source_id）
-    2. 不存在则创建新 Skill
+    2. 不存在则创建新 Tool
     3. 已存在则更新部分字段（description, tags, stars 等）
     - 自动生成 slug（基于 name）
     - 自动分类（基于 tags/keywords 匹配分类）
@@ -171,35 +171,35 @@ async def crawl_and_save(
             async with async_session_factory() as session:
                 try:
                     # 检查是否已存在
-                    stmt = select(Skill).where(
-                        Skill.source == source,
-                        Skill.source_id == result.source_id,
+                    stmt = select(Tool).where(
+                        Tool.source == source,
+                        Tool.source_id == result.source_id,
                     )
                     db_result = await session.execute(stmt)
-                    existing_skill = db_result.scalar_one_or_none()
+                    existing_tool = db_result.scalar_one_or_none()
 
-                    if existing_skill:
+                    if existing_tool:
                         # 更新已有记录
-                        existing_skill.description = result.description or existing_skill.description
-                        existing_skill.tags = result.tags or existing_skill.tags
-                        existing_skill.author = result.author or existing_skill.author
-                        existing_skill.homepage_url = result.homepage_url or existing_skill.homepage_url
-                        existing_skill.icon_url = result.icon_url or existing_skill.icon_url
-                        existing_skill.license = result.license or existing_skill.license
-                        existing_skill.last_synced_at = datetime.utcnow()
+                        existing_tool.description = result.description or existing_tool.description
+                        existing_tool.tags = result.tags or existing_tool.tags
+                        existing_tool.author = result.author or existing_tool.author
+                        existing_tool.homepage_url = result.homepage_url or existing_tool.homepage_url
+                        existing_tool.icon_url = result.icon_url or existing_tool.icon_url
+                        existing_tool.license = result.license or existing_tool.license
+                        existing_tool.last_synced_at = datetime.utcnow()
 
                         # 更新 extra 信息到对应的统计字段
                         stars = result.extra.get("stars", 0)
                         if stars:
-                            existing_skill.usage_count = stars  # 暂用 usage_count 存储 stars
+                            existing_tool.usage_count = stars  # 暂用 usage_count 存储 stars
 
                         # 重新计算质量评分
                         quality = await calculate_quality_score(result)
-                        existing_skill.quality_score = Decimal(str(round(quality, 2)))
+                        existing_tool.quality_score = Decimal(str(round(quality, 2)))
 
                         await session.commit()
                         updated += 1
-                        logger.debug(f"更新已有技能: {result.name}")
+                        logger.debug(f"更新已有工具: {result.name}")
                     else:
                         # 创建新记录
                         slug = await _generate_unique_slug(session, result.name)
@@ -238,12 +238,12 @@ async def crawl_and_save(
                             except Exception as e:
                                 logger.debug(f"获取 README 失败 ({result.source_id}): {e}")
 
-                        new_skill = Skill(
+                        new_tool = Tool(
                             name=result.name,
                             slug=slug,
                             description=result.description or "暂无描述",
                             detail=detail,
-                            skill_type=result.skill_type,
+                            tool_type=result.tool_type,
                             platforms=result.platforms or [],
                             category_id=category_id,
                             tags=result.tags or [],
@@ -267,31 +267,31 @@ async def crawl_and_save(
                             last_synced_at=datetime.utcnow(),
                         )
 
-                        session.add(new_skill)
+                        session.add(new_tool)
                         await session.flush()
                         await session.commit()
                         created += 1
-                        logger.debug(f"创建新技能: {result.name} (slug={slug})")
+                        logger.debug(f"创建新工具: {result.name} (slug={slug})")
 
                         # 尝试同步到 ES
                         try:
-                            await index_skill({
-                                "id": str(new_skill.id),
-                                "name": new_skill.name,
-                                "name_suggest": new_skill.name,
-                                "description": new_skill.description,
-                                "detail": new_skill.detail or "",
-                                "tags": new_skill.tags,
-                                "skill_type": new_skill.skill_type,
+                            await index_tool({
+                                "id": str(new_tool.id),
+                                "name": new_tool.name,
+                                "name_suggest": new_tool.name,
+                                "description": new_tool.description,
+                                "detail": new_tool.detail or "",
+                                "tags": new_tool.tags,
+                                "tool_type": new_tool.tool_type,
                                 "category_slug": "",
-                                "author": new_skill.author or "",
-                                "platforms": new_skill.platforms,
-                                "quality_score": float(new_skill.quality_score),
-                                "usage_count": new_skill.usage_count or 0,
-                                "favorite_count": new_skill.favorite_count or 0,
-                                "is_featured": new_skill.is_featured,
-                                "status": new_skill.status,
-                                "created_at": new_skill.created_at.isoformat() if new_skill.created_at else datetime.utcnow().isoformat(),
+                                "author": new_tool.author or "",
+                                "platforms": new_tool.platforms,
+                                "quality_score": float(new_tool.quality_score),
+                                "usage_count": new_tool.usage_count or 0,
+                                "favorite_count": new_tool.favorite_count or 0,
+                                "is_featured": new_tool.is_featured,
+                                "status": new_tool.status,
+                                "created_at": new_tool.created_at.isoformat() if new_tool.created_at else datetime.utcnow().isoformat(),
                             })
                         except Exception as e:
                             logger.debug(f"ES 索引失败（不影响主流程）: {e}")
@@ -487,10 +487,10 @@ async def _generate_unique_slug(db: AsyncSession, name: str) -> str:
 
     base_slug = slugify(name, lowercase=True, max_length=180)
     if not base_slug:
-        base_slug = f"skill-{uuid.uuid4().hex[:8]}"
+        base_slug = f"tool-{uuid.uuid4().hex[:8]}"
 
     # 检查是否已存在
-    stmt = select(Skill).where(Skill.slug == base_slug)
+    stmt = select(Tool).where(Tool.slug == base_slug)
     db_result = await db.execute(stmt)
     existing = db_result.scalar_one_or_none()
 
@@ -500,7 +500,7 @@ async def _generate_unique_slug(db: AsyncSession, name: str) -> str:
     # 存在冲突，追加数字后缀
     for i in range(2, 100):
         candidate = f"{base_slug}-{i}"
-        stmt = select(Skill).where(Skill.slug == candidate)
+        stmt = select(Tool).where(Tool.slug == candidate)
         db_result = await db.execute(stmt)
         if not db_result.scalar_one_or_none():
             return candidate
@@ -576,14 +576,14 @@ async def full_crawl(
         source: 采集源 (github/gitee)
         max_items_per_query: 每个查询最多返回条数
         delay_between_queries: 查询之间的延迟（秒），避免触发速率限制
-        clean_before: 采集前是否清理旧数据（清空 skills 表 + 重建 ES 索引）
+        clean_before: 采集前是否清理旧数据（清空 tools 表 + 重建 ES 索引）
     
     Returns:
         {"success": True, "queries": n, "total_created": x, "total_updated": y, "total_skipped": z, "details": [...]}
     """
     import asyncio
     from app.core.database import async_session_factory
-    from app.services.es_service import ensure_skills_index
+    from app.services.es_service import ensure_tools_index
     
     total_created = 0
     total_updated = 0
@@ -592,27 +592,27 @@ async def full_crawl(
     
     # ── 采集前清理旧数据 ─────────────────────────────
     if clean_before:
-        logger.warning("=== 采集前清理模式：将清空 skills 表并重建 ES 索引 ===")
+        logger.warning("=== 采集前清理模式：将清空 tools 表并重建 ES 索引 ===")
         
-        # 1. 清空 skills 表
+        # 1. 清空 tools 表
         try:
             async with async_session_factory() as session:
                 from sqlalchemy import text
-                await session.execute(text("DELETE FROM skills"))
+                await session.execute(text("DELETE FROM tools"))
                 await session.commit()
-                logger.info("已清空 skills 表")
+                logger.info("已清空 tools 表")
         except Exception as e:
-            logger.error(f"清空 skills 表失败: {e}")
+            logger.error(f"清空 tools 表失败: {e}")
         
         # 2. 删除并重建 ES 索引
         try:
             from app.services.es_service import get_es_client
             es = await get_es_client()
-            exists = await es.indices.exists(index="skills")
+            exists = await es.indices.exists(index="tools")
             if exists:
-                await es.indices.delete(index="skills")
+                await es.indices.delete(index="tools")
                 logger.info("已删除旧 ES 索引")
-            await ensure_skills_index()
+            await ensure_tools_index()
             logger.info("已重建 ES 索引")
         except Exception as e:
             logger.warning(f"ES 索引重建失败（不影响采集）: {e}")
@@ -627,7 +627,7 @@ async def full_crawl(
         from app.crawlers.gitee_crawler import GiteeCrawler
         from app.core.config import settings
         crawler = GiteeCrawler(token=settings.GITEE_TOKEN)
-        queries = ["mcp server", "ai agent", "llm tool", "ai skill"]
+        queries = ["mcp server", "ai agent", "llm tool", "ai tool"]
     else:
         return {"success": False, "message": f"不支持的采集源: {source}"}
     

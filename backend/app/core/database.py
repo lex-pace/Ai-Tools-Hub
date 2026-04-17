@@ -1,4 +1,4 @@
-"""AI Skills Hub — SQLAlchemy 2.0 异步数据库引擎与会话管理"""
+"""AI Tools Hub — SQLAlchemy 2.0 异步数据库引擎与会话管理"""
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 

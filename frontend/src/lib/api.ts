@@ -1,10 +1,10 @@
 import axios from "axios";
 import type {
   Category,
-  Skill,
-  SkillType,
-  SkillPlatform,
-  SkillRating,
+  Tool,
+  ToolType,
+  ToolPlatform,
+  ToolRating,
   SearchFilters,
   SearchResult,
   TokenResponse,
@@ -62,19 +62,19 @@ api.interceptors.response.use(
   }
 );
 
-// ==================== Helper: map backend SkillList to frontend Skill ====================
+// ==================== Helper: map backend ToolList to frontend Tool ====================
 
-function mapSkill(raw: any): Skill {
+function mapTool(raw: any): Tool {
   return {
     id: raw.id,
     name: raw.name || "",
     description: raw.description || "",
     detail: raw.detail || null,
-    type: (raw.skill_type || raw.type || "tool") as SkillType,
-    platform: (raw.platforms?.[0] || raw.platform || "general") as SkillPlatform,
+    type: (raw.tool_type || raw.type || "tool") as ToolType,
+    platform: (raw.platforms?.[0] || raw.platform || "general") as ToolPlatform,
     category: raw.category
-      ? { id: raw.category.id || "", name: raw.category.name || "", slug: raw.category.slug || "", skillCount: 0, icon: raw.category.icon }
-      : { id: "", name: "", slug: "", skillCount: 0 },
+      ? { id: raw.category.id || "", name: raw.category.name || "", slug: raw.category.slug || "", toolCount: 0, icon: raw.category.icon }
+      : { id: "", name: "", slug: "", toolCount: 0 },
     author: raw.author || "",
     version: raw.version || null,
     content: raw.content || raw.detail || "",
@@ -82,7 +82,7 @@ function mapSkill(raw: any): Skill {
     rating: {
       score: Number(raw.quality_score) || Number(raw.avg_rating) || 0,
       count: raw.review_count || raw.rating_count || 0,
-    } as SkillRating,
+    } as ToolRating,
     usageCount: raw.usage_count || 0,
     favoriteCount: raw.favorite_count || 0,
     isFeatured: raw.is_featured || false,
@@ -102,7 +102,7 @@ function mapCategory(raw: any): Category {
     slug: raw.slug || "",
     description: raw.description || "",
     icon: raw.icon || null,
-    skillCount: raw.skill_count || raw.skillCount || 0,
+    toolCount: raw.tool_count || raw.toolCount || 0,
     parentId: raw.parent_id || null,
     children: raw.children ? raw.children.map(mapCategory) : undefined,
   };
@@ -126,9 +126,9 @@ export async function getCategoryById(id: string): Promise<Category> {
   return mapCategory(res.data?.data);
 }
 
-// ==================== Skills ====================
+// ==================== Tools ====================
 
-export async function getSkills(params?: {
+export async function getTools(params?: {
   page?: number;
   pageSize?: number;
   categoryId?: string;
@@ -150,17 +150,17 @@ export async function getSkills(params?: {
     };
     queryParams.sort = sortMap[params.sortBy] || params.sortBy;
   }
-  // 注意: 后端 GET /skills 不支持 is_featured 参数，忽略它
+  // 注意: 后端 GET /tools 不支持 is_featured 参数，忽略它
 
-  const res = await api.get("/skills", { params: queryParams });
+  const res = await api.get("/tools", { params: queryParams });
   const body = res.data;
 
-  // 后端 ResponseWithPagination: { code, data: [SkillList...], pagination: { page, size, total, pages } }
+  // 后端 ResponseWithPagination: { code, data: [ToolList...], pagination: { page, size, total, pages } }
   if (body?.pagination) {
     const pag = body.pagination;
     const items = Array.isArray(body.data) ? body.data : [];
     return {
-      items: items.map(mapSkill),
+      items: items.map(mapTool),
       total: pag.total || 0,
       page: pag.page || 1,
       pageSize: pag.size || 10,
@@ -172,7 +172,7 @@ export async function getSkills(params?: {
   const data = body?.data;
   const items = Array.isArray(data) ? data : data?.items || [];
   return {
-    items: items.map(mapSkill),
+    items: items.map(mapTool),
     total: data?.total || body?.total || 0,
     page: data?.page || body?.page || 1,
     pageSize: data?.pageSize || data?.size || body?.size || 10,
@@ -180,17 +180,17 @@ export async function getSkills(params?: {
   };
 }
 
-export async function getFeaturedSkills(page = 1, pageSize = 6): Promise<SearchResult> {
+export async function getFeaturedTools(page = 1, pageSize = 6): Promise<SearchResult> {
   try {
-    // 后端不支持 is_featured 参数，改用 sort=usage_count 获取热门技能
-    const res = await api.get("/skills", { params: { sort: "usage_count", page, size: pageSize } });
+    // 后端不支持 is_featured 参数，改用 sort=usage_count 获取热门工具
+    const res = await api.get("/tools", { params: { sort: "usage_count", page, size: pageSize } });
     const body = res.data;
 
     if (body?.pagination) {
       const pag = body.pagination;
       const items = Array.isArray(body.data) ? body.data : [];
       return {
-        items: items.map(mapSkill),
+        items: items.map(mapTool),
         total: pag.total || 0,
         page: pag.page || page,
         pageSize: pag.size || pageSize,
@@ -201,32 +201,32 @@ export async function getFeaturedSkills(page = 1, pageSize = 6): Promise<SearchR
     const data = body?.data;
     const items = Array.isArray(data) ? data : data?.items || [];
     return {
-      items: items.map(mapSkill),
+      items: items.map(mapTool),
       total: data?.total || 0,
       page: data?.page || page,
       pageSize: data?.pageSize || data?.size || pageSize,
       totalPages: data?.totalPages || data?.pages || 1,
     };
   } catch {
-    // /skills 端点可能不可用，返回空
+    // /tools 端点可能不可用，返回空
     return { items: [], total: 0, page: 1, pageSize, totalPages: 0 };
   }
 }
 
-export async function getSkillsByCategory(
+export async function getToolsByCategory(
   categoryId: string,
   page = 1,
   pageSize = 12
 ): Promise<SearchResult> {
   // 后端参数: category_id, page, size
-  const res = await api.get("/skills", { params: { category_id: categoryId, page, size: pageSize } });
+  const res = await api.get("/tools", { params: { category_id: categoryId, page, size: pageSize } });
   const body = res.data;
 
   if (body?.pagination) {
     const pag = body.pagination;
     const items = Array.isArray(body.data) ? body.data : [];
     return {
-      items: items.map(mapSkill),
+      items: items.map(mapTool),
       total: pag.total || 0,
       page: pag.page || page,
       pageSize: pag.size || pageSize,
@@ -237,7 +237,7 @@ export async function getSkillsByCategory(
   const data = body?.data;
   const items = Array.isArray(data) ? data : data?.items || [];
   return {
-    items: items.map(mapSkill),
+    items: items.map(mapTool),
     total: data?.total || 0,
     page: data?.page || page,
     pageSize: data?.pageSize || data?.size || pageSize,
@@ -245,19 +245,19 @@ export async function getSkillsByCategory(
   };
 }
 
-export async function getSkillDetail(id: string): Promise<Skill> {
-  const res = await api.get(`/skills/${id}`);
-  return mapSkill(res.data?.data);
+export async function getToolDetail(id: string): Promise<Tool> {
+  const res = await api.get(`/tools/${id}`);
+  return mapTool(res.data?.data);
 }
 
 // ==================== Search ====================
 
-export async function searchSkills(filters: SearchFilters): Promise<SearchResult> {
+export async function searchTools(filters: SearchFilters): Promise<SearchResult> {
   const params: Record<string, any> = {};
 
   if (filters.query) params.q = filters.query;
   if (filters.categoryId) params.category_id = filters.categoryId;
-  if (filters.type) params.skill_type = filters.type;
+  if (filters.type) params.tool_type = filters.type;
   if (filters.platform) params.platform = filters.platform;
   if (filters.sortBy) {
     const sortMap: Record<string, string> = {
@@ -275,12 +275,12 @@ export async function searchSkills(filters: SearchFilters): Promise<SearchResult
   const res = await api.get("/search", { params });
   const body = res.data;
 
-  // 后端 ResponseWithPagination: { code, data: [SkillList...], pagination: { page, size, total, pages } }
+  // 后端 ResponseWithPagination: { code, data: [ToolList...], pagination: { page, size, total, pages } }
   if (body?.pagination) {
     const pag = body.pagination;
     const items = Array.isArray(body.data) ? body.data : [];
     return {
-      items: items.map(mapSkill),
+      items: items.map(mapTool),
       total: pag.total || 0,
       page: pag.page || 1,
       pageSize: pag.size || 10,
@@ -291,7 +291,7 @@ export async function searchSkills(filters: SearchFilters): Promise<SearchResult
   const data = body?.data;
   const items = Array.isArray(data) ? data : data?.items || [];
   return {
-    items: items.map(mapSkill),
+    items: items.map(mapTool),
     total: data?.total || 0,
     page: data?.page || 1,
     pageSize: data?.pageSize || data?.size || 10,
@@ -301,7 +301,7 @@ export async function searchSkills(filters: SearchFilters): Promise<SearchResult
 
 // ==================== Favorites (localStorage) ====================
 
-const FAVORITES_KEY = "ai-skills-hub-favorites";
+const FAVORITES_KEY = "ai-tools-hub-favorites";
 
 export function getFavorites(): string[] {
   if (typeof window === "undefined") return [];
@@ -313,24 +313,24 @@ export function getFavorites(): string[] {
   }
 }
 
-export function addFavorite(skillId: string): string[] {
+export function addFavorite(toolId: string): string[] {
   const favorites = getFavorites();
-  if (!favorites.includes(skillId)) {
-    favorites.push(skillId);
+  if (!favorites.includes(toolId)) {
+    favorites.push(toolId);
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
   }
   return favorites;
 }
 
-export function removeFavorite(skillId: string): string[] {
+export function removeFavorite(toolId: string): string[] {
   let favorites = getFavorites();
-  favorites = favorites.filter((id) => id !== skillId);
+  favorites = favorites.filter((id) => id !== toolId);
   localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
   return favorites;
 }
 
-export function isFavorite(skillId: string): boolean {
-  return getFavorites().includes(skillId);
+export function isFavorite(toolId: string): boolean {
+  return getFavorites().includes(toolId);
 }
 
 // ==================== Auth API ====================
@@ -357,21 +357,21 @@ export const favoriteApi = {
   getList: (page = 1, pageSize = 12) =>
     api.get("/favorites", { params: { page, size: pageSize } }),
 
-  add: (skillId: string) => api.post(`/favorites/${skillId}`),
+  add: (toolId: string) => api.post(`/favorites/${toolId}`),
 
-  remove: (skillId: string) => api.delete(`/favorites/${skillId}`),
+  remove: (toolId: string) => api.delete(`/favorites/${toolId}`),
 
-  check: (skillId: string) => api.get(`/favorites/check/${skillId}`),
+  check: (toolId: string) => api.get(`/favorites/check/${toolId}`),
 };
 
 // ==================== Reviews API ====================
 
 export const reviewApi = {
-  getList: (skillId: string, page = 1, pageSize = 10) =>
-    api.get(`/skills/${skillId}/reviews`, { params: { page, pageSize } }),
+  getList: (toolId: string, page = 1, pageSize = 10) =>
+    api.get(`/tools/${toolId}/reviews`, { params: { page, pageSize } }),
 
-  create: (skillId: string, data: { rating: number; comment?: string }) =>
-    api.post(`/skills/${skillId}/reviews`, data),
+  create: (toolId: string, data: { rating: number; comment?: string }) =>
+    api.post(`/tools/${toolId}/reviews`, data),
 
   update: (reviewId: string, data: { rating: number; comment?: string }) =>
     api.put(`/reviews/${reviewId}`, data),
@@ -385,11 +385,11 @@ export const recommendApi = {
   recommend: (query: string, page = 1, size = 10) =>
     api.post("/recommend", { query, page, size }),
 
-  related: async (skillId: string, limit = 6): Promise<Skill[]> => {
-    const res = await api.get(`/recommend/related/${skillId}`, { params: { limit } });
+  related: async (toolId: string, limit = 6): Promise<Tool[]> => {
+    const res = await api.get(`/recommend/related/${toolId}`, { params: { limit } });
     const data = res.data?.data;
-    if (Array.isArray(data)) return data.map(mapSkill);
-    if (data && Array.isArray(data.items)) return data.items.map(mapSkill);
+    if (Array.isArray(data)) return data.map(mapTool);
+    if (data && Array.isArray(data.items)) return data.items.map(mapTool);
     return [];
   },
 };
@@ -411,11 +411,11 @@ export async function getSearchHistory(limit: number = 10) {
 export async function getRanking(params?: {
   sort_by?: string;
   category_id?: string;
-  skill_type?: string;
+  tool_type?: string;
   page?: number;
   size?: number;
 }): Promise<SearchResult> {
-  const res = await api.get("/ranking/skills", { params });
+  const res = await api.get("/ranking/tools", { params });
   const body = res.data;
   // 后端返回 { success: true, data: { items, total, page, size, sort_by } }
   // 注意：没有 pages 字段，需要手动计算
@@ -427,7 +427,7 @@ export async function getRanking(params?: {
   const pages = size > 0 ? Math.ceil(total / size) : 0;
 
   return {
-    items: rawItems.map(mapSkill),
+    items: rawItems.map(mapTool),
     total,
     page,
     pageSize: size,

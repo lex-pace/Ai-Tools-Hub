@@ -1,4 +1,4 @@
-"""AI Skills Hub — 分类 Schema"""
+"""AI Tools Hub — 分类 Schema"""
 import uuid
 from datetime import datetime
 from typing import Optional, List
@@ -17,7 +17,7 @@ class CategoryOut(BaseModel):
     icon: Optional[str] = None
     sort_order: int = 0
     is_active: bool = True
-    skill_count: int = 0
+    tool_count: int = 0
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
@@ -33,7 +33,7 @@ class CategoryTree(BaseModel):
 
 
 class CategoryBrief(BaseModel):
-    """分类简要信息（用于技能列表中的分类字段）"""
+    """分类简要信息（用于工具列表中的分类字段）"""
     id: uuid.UUID
     name: str
     slug: str

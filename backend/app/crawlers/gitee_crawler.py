@@ -20,7 +20,7 @@ class GiteeCrawler(BaseCrawler):
 
     BASE_URL = "https://gitee.com/api/v5"
 
-    # AI Skills 相关的搜索关键词
+    # AI Tools 相关的搜索关键词
     SEARCH_QUERIES = [
         "mcp server",
         "model context protocol",
@@ -30,12 +30,12 @@ class GiteeCrawler(BaseCrawler):
         "openai plugin",
     ]
 
-    # 搜索关键词 → skill_type 映射
+    # 搜索关键词 → tool_type 映射
     QUERY_TYPE_MAP = {
         "mcp server": "mcp_server",
         "model context protocol": "mcp_server",
-        "ai agent": "agent_skill",
-        "llm tool": "agent_skill",
+        "ai agent": "agent_tool",
+        "llm tool": "agent_tool",
         "prompt template": "prompt_template",
         "openai plugin": "custom_gpt",
     }
@@ -206,7 +206,7 @@ class GiteeCrawler(BaseCrawler):
 
         return None
 
-    def _parse_repo_item(self, item: dict, skill_type: str = "mcp_server") -> Optional[CrawlResult]:
+    def _parse_repo_item(self, item: dict, tool_type: str = "mcp_server") -> Optional[CrawlResult]:
         """将 Gitee API 返回的仓库数据解析为 CrawlResult
 
         Gitee 返回格式与 GitHub 类似但不完全相同，注意字段映射。
@@ -281,7 +281,7 @@ class GiteeCrawler(BaseCrawler):
                 tags=tags,
                 license=license_name,
                 icon_url=icon_url,
-                skill_type=skill_type,
+                tool_type=tool_type,
                 source="gitee",
                 source_id=full_name,
                 extra=extra,

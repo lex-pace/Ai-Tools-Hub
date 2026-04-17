@@ -8,14 +8,14 @@ import { reviewApi } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 
 interface ReviewFormProps {
-  skillId: string;
+  toolId: string;
   onSubmitted?: () => void;
 }
 
 const MIN_CONTENT_LENGTH = 10;
 const MAX_CONTENT_LENGTH = 500;
 
-export default function ReviewForm({ skillId, onSubmitted }: ReviewFormProps) {
+export default function ReviewForm({ toolId, onSubmitted }: ReviewFormProps) {
   const { isAuthenticated } = useAuthStore();
   const [rating, setRating] = useState(5);
   const [hoverRating, setHoverRating] = useState(0);
@@ -46,7 +46,7 @@ export default function ReviewForm({ skillId, onSubmitted }: ReviewFormProps) {
 
     setSubmitting(true);
     try {
-      await reviewApi.create(skillId, {
+      await reviewApi.create(toolId, {
         rating,
         comment: trimmedContent || undefined,
       });

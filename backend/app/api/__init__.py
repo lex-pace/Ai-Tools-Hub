@@ -1,1 +1,1 @@
-"""AI Skills Hub — API 包"""
+"""AI Tools Hub — API 包"""

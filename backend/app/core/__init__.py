@@ -1,1 +1,1 @@
-"""AI Skills Hub — 核心模块"""
+"""AI Tools Hub — 核心模块"""

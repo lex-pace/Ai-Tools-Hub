@@ -3,9 +3,9 @@
 import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense, useEffect, useCallback, useRef, useState } from "react";
 import SearchBar from "@/components/search/SearchBar";
-import SkillCard from "@/components/home/SkillCard";
-import { searchSkills } from "@/lib/api";
-import { PLATFORM_MAP, SKILL_TYPE_MAP, SKILL_TYPE_COLORS, type Skill } from "@/lib/types";
+import ToolCard from "@/components/home/ToolCard";
+import { searchTools } from "@/lib/api";
+import { PLATFORM_MAP, TOOL_TYPE_MAP, TOOL_TYPE_COLORS, type Tool } from "@/lib/types";
 import { formatNumber } from "@/lib/utils";
 import { useSearchStore } from "@/store/searchStore";
 import { Star, Heart, Eye, ChevronLeft, ChevronRight } from "lucide-react";
@@ -24,11 +24,11 @@ function RelevanceBar({ score }: { score: number }) {
   return <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-r" style={{ background: colors[level] }} />;
 }
 
-function ResultCard({ skill, query }: { skill: Skill; query?: string }) {
+function ResultCard({ tool, query }: { tool: Tool; query?: string }) {
   const [mx, setMx] = useState("50%");
   const [my, setMy] = useState("50%");
-  const typeLabel = SKILL_TYPE_MAP[skill.type] || skill.type;
-  const platformInfo = PLATFORM_MAP[skill.platform] || PLATFORM_MAP.general;
+  const typeLabel = TOOL_TYPE_MAP[tool.type] || tool.type;
+  const platformInfo = PLATFORM_MAP[tool.platform] || PLATFORM_MAP.general;
   const relevance = 0.5 + Math.random() * 0.5; // Simulated relevance
 
   const highlightText = (text: string) => {
@@ -62,24 +62,24 @@ function ResultCard({ skill, query }: { skill: Skill; query?: string }) {
             <button className="w-7 h-7 rounded-lg flex items-center justify-center text-xs cursor-pointer transition-all" style={{ border: "1px solid rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.02)", color: "var(--text-lo)" }}>⋯</button>
           </div>
         </div>
-        <h3 className="text-base font-extrabold tracking-tight mb-1 transition-colors group-hover:text-[var(--cyan)]">{skill.name}</h3>
-        <p className="text-sm mb-3 line-clamp-2" style={{ color: "var(--text-mid)", lineHeight: "1.6" }}>{highlightText(skill.description)}</p>
-        {skill.tags.length > 0 && (
+        <h3 className="text-base font-extrabold tracking-tight mb-1 transition-colors group-hover:text-[var(--cyan)]">{tool.name}</h3>
+        <p className="text-sm mb-3 line-clamp-2" style={{ color: "var(--text-mid)", lineHeight: "1.6" }}>{highlightText(tool.description)}</p>
+        {tool.tags.length > 0 && (
           <div className="flex gap-1.5 flex-wrap mb-3">
-            {skill.tags.slice(0, 5).map((tag) => (
+            {tool.tags.slice(0, 5).map((tag) => (
               <span key={tag} className="px-2 py-0.5 rounded text-[11px]" style={{ background: "rgba(255,255,255,0.02)", color: "var(--text-lo)", border: "1px solid rgba(255,255,255,0.04)" }}>{tag}</span>
             ))}
           </div>
         )}
         <div className="flex justify-between items-center">
           <div className="flex gap-3 items-center text-xs" style={{ color: "var(--text-lo)" }}>
-            <span className="flex items-center gap-1">👤 {skill.author || "unknown"}</span>
+            <span className="flex items-center gap-1">👤 {tool.author || "unknown"}</span>
             <span>·</span>
-            <span>⭐ {formatNumber(skill.usageCount)}</span>
+            <span>⭐ {formatNumber(tool.usageCount)}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="flex gap-0.5">{[1,2,3,4,5].map(i => <Star key={i} className="w-3 h-3" style={{ color: i <= Math.round(skill.rating.score) ? "var(--amber)" : "var(--text-lo)", opacity: i <= Math.round(skill.rating.score) ? 1 : 0.3, fill: i <= Math.round(skill.rating.score) ? "var(--amber)" : "none" }} />)}</div>
-            <span className="text-sm font-bold" style={{ color: "var(--cyan)" }}>{skill.rating.score.toFixed(1)}</span>
+            <div className="flex gap-0.5">{[1,2,3,4,5].map(i => <Star key={i} className="w-3 h-3" style={{ color: i <= Math.round(tool.rating.score) ? "var(--amber)" : "var(--text-lo)", opacity: i <= Math.round(tool.rating.score) ? 1 : 0.3, fill: i <= Math.round(tool.rating.score) ? "var(--amber)" : "none" }} />)}</div>
+            <span className="text-sm font-bold" style={{ color: "var(--cyan)" }}>{tool.rating.score.toFixed(1)}</span>
           </div>
         </div>
       </div>
@@ -110,7 +110,7 @@ function SearchContent() {
   const doSearch = useCallback(async () => {
     if (!query.trim()) return;
     setLoading(true); setError(null);
-    try { const result = await searchSkills({ query, ...filters, page }); setResults(result); }
+    try { const result = await searchTools({ query, ...filters, page }); setResults(result); }
     catch (err) { setError(err instanceof Error ? err.message : "搜索失败"); }
   }, [query, filters, page, setResults, setLoading, setError]);
 
@@ -194,9 +194,9 @@ function SearchContent() {
       ) : results.length === 0 ? (
         <div className="text-center py-16 rounded-2xl" style={{ border: "1px dashed var(--glass-border)" }}><p style={{ color: "var(--text-lo)" }}>没有找到相关结果</p></div>
       ) : viewMode === "grid" ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{results.map((skill: Skill) => <SkillCard key={skill.id} skill={skill} />)}</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{results.map((tool: Tool) => <ToolCard key={tool.id} tool={tool} />)}</div>
       ) : (
-        <div>{results.map((skill: Skill) => <ResultCard key={skill.id} skill={skill} query={query} />)}</div>
+        <div>{results.map((tool: Tool) => <ResultCard key={tool.id} tool={tool} query={query} />)}</div>
       )}
 
       {/* Pagination */}

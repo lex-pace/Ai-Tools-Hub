@@ -1,4 +1,4 @@
-"""AI Skills Hub — Elasticsearch 异步客户端单例"""
+"""AI Tools Hub — Elasticsearch 异步客户端单例"""
 from elasticsearch import AsyncElasticsearch
 
 from app.core.config import settings

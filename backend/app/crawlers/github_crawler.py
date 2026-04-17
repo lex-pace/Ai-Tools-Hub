@@ -16,7 +16,7 @@ class GitHubCrawler(BaseCrawler):
 
     BASE_URL = "https://api.github.com"
 
-    # AI Skills 相关的搜索关键词
+    # AI Tools 相关的搜索关键词
     SEARCH_QUERIES = [
         "mcp server",
         "model context protocol",
@@ -28,13 +28,13 @@ class GitHubCrawler(BaseCrawler):
         "claude tool",
     ]
 
-    # 搜索关键词 → skill_type 映射
+    # 搜索关键词 → tool_type 映射
     QUERY_TYPE_MAP = {
         "mcp server": "mcp_server",
         "model context protocol": "mcp_server",
         "custom gpt actions": "custom_gpt",
-        "ai agent tool": "agent_skill",
-        "llm tool calling": "agent_skill",
+        "ai agent tool": "agent_tool",
+        "llm tool calling": "agent_tool",
         "ai prompt template": "prompt_template",
         "openai plugin": "custom_gpt",
         "claude tool": "mcp_server",
@@ -193,7 +193,7 @@ class GitHubCrawler(BaseCrawler):
 
         return None
 
-    def _parse_repo_item(self, item: dict, skill_type: str = "mcp_server") -> Optional[CrawlResult]:
+    def _parse_repo_item(self, item: dict, tool_type: str = "mcp_server") -> Optional[CrawlResult]:
         """将 GitHub API 返回的仓库数据解析为 CrawlResult"""
         try:
             # 提取 license 信息
@@ -245,7 +245,7 @@ class GitHubCrawler(BaseCrawler):
                 tags=tags,
                 license=license_name,
                 icon_url=icon_url,
-                skill_type=skill_type,
+                tool_type=tool_type,
                 source="github",
                 source_id=item.get("full_name", ""),
                 extra=extra,

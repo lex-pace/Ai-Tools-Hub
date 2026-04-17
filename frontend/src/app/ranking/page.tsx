@@ -4,7 +4,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Suspense, useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { getRanking } from "@/lib/api";
-import type { Skill, SearchResult } from "@/lib/types";
+import type { Tool, SearchResult } from "@/lib/types";
 import { formatNumber } from "@/lib/utils";
 import { Star, Flame, TrendingUp, Trophy, Crown, Medal, Zap, BarChart3, ExternalLink } from "lucide-react";
 
@@ -46,7 +46,7 @@ function Pagination({ page, totalPages, total, loading, onPageChange }: { page: 
 }
 
 /** Top3 高亮卡片 */
-function Top3Card({ skill, rank }: { skill: Skill; rank: number }) {
+function Top3Card({ tool, rank }: { tool: Tool; rank: number }) {
   const gradients = [
     "linear-gradient(135deg, rgba(251,191,36,0.12), rgba(245,158,11,0.06))",
     "linear-gradient(135deg, rgba(226,232,240,0.10), rgba(148,163,184,0.05))",
@@ -60,16 +60,16 @@ function Top3Card({ skill, rank }: { skill: Skill; rank: number }) {
   const icons = ["🥇", "🥈", "🥉"];
 
   return (
-    <Link href={`/skills/${skill.id}`} className="block group">
+    <Link href={`/tools/${tool.id}`} className="block group">
       <div className="rounded-xl p-3.5 transition-all duration-300 hover:-translate-y-0.5 cursor-pointer" style={{ background: gradients[rank - 1], border: `1px solid ${borders[rank - 1]}` }}>
         <div className="flex items-start gap-2.5">
           <span className="text-lg shrink-0">{icons[rank - 1]}</span>
           <div className="flex-1 min-w-0">
-            <div className="font-bold text-sm truncate transition-colors group-hover:text-[var(--cyan)]">{skill.name}</div>
-            <div className="text-[11px] line-clamp-1 mt-0.5" style={{ color: "var(--text-lo)" }}>{skill.description}</div>
+            <div className="font-bold text-sm truncate transition-colors group-hover:text-[var(--cyan)]">{tool.name}</div>
+            <div className="text-[11px] line-clamp-1 mt-0.5" style={{ color: "var(--text-lo)" }}>{tool.description}</div>
             <div className="flex gap-3 mt-2 text-[11px]" style={{ color: "var(--text-mid)" }}>
-              <span>★ {skill.rating.score.toFixed(1)}</span>
-              <span>⭐ {formatNumber(skill.usageCount)}</span>
+              <span>★ {tool.rating.score.toFixed(1)}</span>
+              <span>⭐ {formatNumber(tool.usageCount)}</span>
             </div>
           </div>
           <ExternalLink className="w-3.5 h-3.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity mt-0.5" style={{ color: "var(--text-lo)" }} />
@@ -154,26 +154,26 @@ function RankingContent() {
             {/* Top3 高亮卡片 */}
             {page === 1 && top3.length > 0 && (
               <div className="grid grid-cols-3 gap-3 mb-5">
-                {top3.map((skill, i) => <Top3Card key={skill.id} skill={skill} rank={i + 1} />)}
+                {top3.map((tool, i) => <Top3Card key={tool.id} tool={tool} rank={i + 1} />)}
               </div>
             )}
 
             {/* 4+ 列表 */}
             <div className="space-y-2">
-              {restItems.map((skill, index) => {
+              {restItems.map((tool, index) => {
                 const rank = (data.page - 1) * data.pageSize + index + 4;
                 return (
-                  <Link key={skill.id} href={`/skills/${skill.id}`} className="block">
+                  <Link key={tool.id} href={`/tools/${tool.id}`} className="block">
                     <div className="flex items-center gap-3.5 p-3.5 rounded-xl cursor-pointer transition-all duration-[400ms] hover:translate-x-1 relative overflow-hidden group" style={{ background: "var(--glass)", border: "1px solid var(--glass-border)" }}>
                       <div className="absolute left-0 top-0 bottom-0 w-0 group-hover:w-full transition-all duration-[400ms]" style={{ background: "linear-gradient(90deg, rgba(0,240,255,0.04), transparent)" }} />
                       <div className="relative z-[1]"><RankBadge rank={rank} /></div>
                       <div className="flex-1 min-w-0 relative z-[1]">
-                        <div className="font-bold text-sm mb-0.5 transition-colors group-hover:text-[var(--cyan)]">{skill.name}</div>
-                        <div className="text-xs line-clamp-1" style={{ color: "var(--text-lo)" }}>{skill.description}</div>
+                        <div className="font-bold text-sm mb-0.5 transition-colors group-hover:text-[var(--cyan)]">{tool.name}</div>
+                        <div className="text-xs line-clamp-1" style={{ color: "var(--text-lo)" }}>{tool.description}</div>
                       </div>
                       <div className="flex gap-4 items-center shrink-0 relative z-[1]">
-                        <span className="text-xs" style={{ color: "var(--text-mid)" }}>★ {skill.rating.score.toFixed(1)}</span>
-                        <span className="text-xs" style={{ color: "var(--text-mid)" }}>⭐ {formatNumber(skill.usageCount)}</span>
+                        <span className="text-xs" style={{ color: "var(--text-mid)" }}>★ {tool.rating.score.toFixed(1)}</span>
+                        <span className="text-xs" style={{ color: "var(--text-mid)" }}>⭐ {formatNumber(tool.usageCount)}</span>
                         <ExternalLink className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: "var(--text-lo)" }} />
                       </div>
                     </div>
@@ -229,13 +229,13 @@ function RankingContent() {
                     <span className="text-xs font-semibold" style={{ color: "var(--text-mid)" }}>王者之巅</span>
                   </div>
                   <div className="space-y-2.5">
-                    {top3.map((skill, i) => (
-                      <Link key={skill.id} href={`/skills/${skill.id}`} className="flex items-center gap-2.5 group cursor-pointer">
+                    {top3.map((tool, i) => (
+                      <Link key={tool.id} href={`/tools/${tool.id}`} className="flex items-center gap-2.5 group cursor-pointer">
                         <span className="text-sm">{["🥇", "🥈", "🥉"][i]}</span>
                         <div className="flex-1 min-w-0">
-                          <div className="text-xs font-semibold truncate transition-colors group-hover:text-[var(--cyan)]">{skill.name}</div>
+                          <div className="text-xs font-semibold truncate transition-colors group-hover:text-[var(--cyan)]">{tool.name}</div>
                         </div>
-                        <span className="text-[11px] shrink-0" style={{ color: "var(--text-lo)" }}>★ {skill.rating.score.toFixed(1)}</span>
+                        <span className="text-[11px] shrink-0" style={{ color: "var(--text-lo)" }}>★ {tool.rating.score.toFixed(1)}</span>
                       </Link>
                     ))}
                   </div>
@@ -250,7 +250,7 @@ function RankingContent() {
                 </div>
                 <div className="space-y-1.5">
                   {[
-                    { label: "热门技能", sort: "popular", icon: "🔥" },
+                    { label: "热门工具", sort: "popular", icon: "🔥" },
                     { label: "最高评分", sort: "quality", icon: "⭐" },
                     { label: "最新上线", sort: "newest", icon: "🆕" },
                     { label: "趋势飙升", sort: "trending", icon: "📈" },

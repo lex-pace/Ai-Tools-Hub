@@ -1,4 +1,4 @@
-"""AI Skills Hub — Redis 异步客户端单例"""
+"""AI Tools Hub — Redis 异步客户端单例"""
 import redis.asyncio as aioredis
 
 from app.core.config import settings

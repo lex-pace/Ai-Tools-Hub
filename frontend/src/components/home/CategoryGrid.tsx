@@ -35,14 +35,14 @@ interface CategoryGridProps { categories?: Category[]; }
 export default function CategoryGrid({ categories }: CategoryGridProps) {
   // 只显示一级分类
   const displayCategories: Category[] = categories?.filter(c => !c.parentId) || [
-    { id: "1", name: "MCP 工具", slug: "mcp-tools", skillCount: 0, description: "", icon: "plug" },
-    { id: "2", name: "AI Agent", slug: "ai-agent", skillCount: 0, description: "", icon: "bot" },
-    { id: "3", name: "Prompt 工程", slug: "prompt-engineering", skillCount: 0, description: "", icon: "wand2" },
-    { id: "4", name: "LLM 框架", slug: "llm-framework", skillCount: 0, description: "", icon: "workflow" },
-    { id: "5", name: "RAG 工具", slug: "rag-tools", skillCount: 0, description: "", icon: "database" },
-    { id: "6", name: "AI 编程", slug: "ai-coding", skillCount: 0, description: "", icon: "code" },
-    { id: "7", name: "AI 创作", slug: "ai-creation", skillCount: 0, description: "", icon: "sparkles" },
-    { id: "8", name: "GPTs & 插件", slug: "gpts-plugins", skillCount: 0, description: "", icon: "messageSquare" },
+    { id: "1", name: "MCP 工具", slug: "mcp-tools", toolCount: 0, description: "", icon: "plug" },
+    { id: "2", name: "AI Agent", slug: "ai-agent", toolCount: 0, description: "", icon: "bot" },
+    { id: "3", name: "Prompt 工程", slug: "prompt-engineering", toolCount: 0, description: "", icon: "wand2" },
+    { id: "4", name: "LLM 框架", slug: "llm-framework", toolCount: 0, description: "", icon: "workflow" },
+    { id: "5", name: "RAG 工具", slug: "rag-tools", toolCount: 0, description: "", icon: "database" },
+    { id: "6", name: "AI 编程", slug: "ai-coding", toolCount: 0, description: "", icon: "code" },
+    { id: "7", name: "AI 创作", slug: "ai-creation", toolCount: 0, description: "", icon: "sparkles" },
+    { id: "8", name: "GPTs & 插件", slug: "gpts-plugins", toolCount: 0, description: "", icon: "messageSquare" },
   ];
 
   return (
@@ -67,7 +67,7 @@ export default function CategoryGrid({ categories }: CategoryGridProps) {
               </div>
               <div className="relative z-[1] min-w-0">
                 <div className="font-bold text-sm truncate">{cat.name}</div>
-                <div className="text-[11px]" style={{ color: "var(--text-lo)" }}>{cat.skillCount > 0 ? `${cat.skillCount} 个工具` : "暂无"}</div>
+                <div className="text-[11px]" style={{ color: "var(--text-lo)" }}>{cat.toolCount > 0 ? `${cat.toolCount} 个工具` : "暂无"}</div>
               </div>
             </Link>
           );

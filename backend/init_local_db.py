@@ -103,8 +103,8 @@ async def init_db():
     count = await conn.fetchval("SELECT COUNT(*) FROM categories")
     print(f"✅ 分类数据: {count} 条")
 
-    skills_count = await conn.fetchval("SELECT COUNT(*) FROM skills")
-    print(f"✅ 技能数据: {skills_count} 条")
+    tools_count = await conn.fetchval("SELECT COUNT(*) FROM tools")
+    print(f"✅ 工具数据: {tools_count} 条")
 
     await conn.close()
     print("\n=== 初始化完成 ===")

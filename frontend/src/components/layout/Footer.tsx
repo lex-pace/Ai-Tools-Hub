@@ -7,8 +7,8 @@ export default function Footer() {
       <div className="max-w-[1200px] mx-auto px-8 py-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <div className="text-lg font-extrabold neon-text mb-2">AI Skills Hub</div>
-            <p className="text-sm" style={{ color: "var(--text-lo)", lineHeight: "1.6" }}>跨生态系统的 AI 技能搜索聚合平台，发现最适合你的智能工具。</p>
+            <div className="text-lg font-extrabold neon-text mb-2">AI Tools Hub</div>
+            <p className="text-sm" style={{ color: "var(--text-lo)", lineHeight: "1.6" }}>跨生态系统的 AI 工具搜索聚合平台，发现最适合你的智能工具。</p>
           </div>
           <div>
             <div className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "var(--text-mid)" }}>产品</div>

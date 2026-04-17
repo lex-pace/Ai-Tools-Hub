@@ -1,5 +1,5 @@
 -- ============================================================
--- AI Skills Hub — 数据库初始化脚本
+-- AI Tools Hub — 数据库初始化脚本
 -- 由 PostgreSQL 容器首次启动时自动执行
 -- ============================================================
 
@@ -29,15 +29,15 @@ CREATE INDEX idx_categories_slug ON categories(slug);
 CREATE INDEX idx_categories_active ON categories(is_active);
 
 -- ============================================================
--- Skills 主表
+-- Tools 主表
 -- ============================================================
-CREATE TABLE IF NOT EXISTS skills (
+CREATE TABLE IF NOT EXISTS tools (
     id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name            VARCHAR(200) NOT NULL,
     slug            VARCHAR(200) NOT NULL UNIQUE,
     description     TEXT NOT NULL,
     detail          TEXT,
-    skill_type      VARCHAR(50) NOT NULL DEFAULT 'mcp_server',
+    tool_type      VARCHAR(50) NOT NULL DEFAULT 'mcp_server',
     platforms       JSONB NOT NULL DEFAULT '[]',
     category_id     UUID REFERENCES categories(id) ON DELETE SET NULL,
     tags            JSONB NOT NULL DEFAULT '[]',
@@ -73,15 +73,15 @@ CREATE TABLE IF NOT EXISTS skills (
     updated_at      TIMESTAMP DEFAULT NOW()
 );
 
-CREATE INDEX idx_skills_type ON skills(skill_type);
-CREATE INDEX idx_skills_platforms ON skills USING GIN(platforms);
-CREATE INDEX idx_skills_category ON skills(category_id);
-CREATE INDEX idx_skills_tags ON skills USING GIN(tags);
-CREATE INDEX idx_skills_quality ON skills(quality_score DESC);
-CREATE INDEX idx_skills_usage ON skills(usage_count DESC);
-CREATE INDEX idx_skills_status ON skills(status);
-CREATE INDEX idx_skills_created ON skills(created_at DESC);
-CREATE INDEX idx_skills_source ON skills(source, source_id);
+CREATE INDEX idx_tools_type ON tools(tool_type);
+CREATE INDEX idx_tools_platforms ON tools USING GIN(platforms);
+CREATE INDEX idx_tools_category ON tools(category_id);
+CREATE INDEX idx_tools_tags ON tools USING GIN(tags);
+CREATE INDEX idx_tools_quality ON tools(quality_score DESC);
+CREATE INDEX idx_tools_usage ON tools(usage_count DESC);
+CREATE INDEX idx_tools_status ON tools(status);
+CREATE INDEX idx_tools_created ON tools(created_at DESC);
+CREATE INDEX idx_tools_source ON tools(source, source_id);
 
 -- ============================================================
 -- 用户表
@@ -108,10 +108,10 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS favorites (
     id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    skill_id    UUID NOT NULL REFERENCES skills(id) ON DELETE CASCADE,
+    tool_id    UUID NOT NULL REFERENCES tools(id) ON DELETE CASCADE,
     group_name  VARCHAR(100) DEFAULT '默认收藏夹',
     created_at  TIMESTAMP DEFAULT NOW(),
-    UNIQUE(user_id, skill_id, group_name)
+    UNIQUE(user_id, tool_id, group_name)
 );
 
 CREATE INDEX idx_favorites_user ON favorites(user_id);
@@ -122,15 +122,15 @@ CREATE INDEX idx_favorites_user ON favorites(user_id);
 CREATE TABLE IF NOT EXISTS reviews (
     id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    skill_id    UUID NOT NULL REFERENCES skills(id) ON DELETE CASCADE,
+    tool_id    UUID NOT NULL REFERENCES tools(id) ON DELETE CASCADE,
     rating      INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
     comment     TEXT,
     created_at  TIMESTAMP DEFAULT NOW(),
     updated_at  TIMESTAMP DEFAULT NOW(),
-    UNIQUE(user_id, skill_id)
+    UNIQUE(user_id, tool_id)
 );
 
-CREATE INDEX idx_reviews_skill ON reviews(skill_id);
+CREATE INDEX idx_reviews_tool ON reviews(tool_id);
 
 -- ============================================================
 -- 搜索日志表
@@ -184,7 +184,7 @@ CREATE TABLE IF NOT EXISTS developer_accounts (
 CREATE TABLE IF NOT EXISTS earnings (
     id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     developer_id    UUID NOT NULL REFERENCES developer_accounts(id) ON DELETE CASCADE,
-    skill_id        UUID REFERENCES skills(id) ON DELETE SET NULL,
+    tool_id        UUID REFERENCES tools(id) ON DELETE SET NULL,
     source          VARCHAR(50) NOT NULL,
     amount          DECIMAL(10,2) NOT NULL,
     status          VARCHAR(20) DEFAULT 'pending',
@@ -196,7 +196,7 @@ CREATE TABLE IF NOT EXISTS earnings (
 -- 插入默认分类数据（AI Tools Hub 分类体系）
 -- ============================================================
 -- 先清理旧分类（如果存在）
-DELETE FROM skills WHERE source = 'seed';
+DELETE FROM tools WHERE source = 'seed';
 DELETE FROM categories;
 
 -- 一级分类（8 个）
@@ -299,9 +299,9 @@ CROSS JOIN (VALUES
 WHERE c.slug = v.parent_slug AND c.level = 1;
 
 -- ============================================================
--- 插入种子 Skills 数据（25 条，适配新分类体系）
+-- 插入种子 Tools 数据（25 条，适配新分类体系）
 -- ============================================================
-INSERT INTO skills (name, slug, description, detail, skill_type, platforms, category_id, tags, author, version, license, github_url, homepage_url, icon_url, quality_score, usage_count, favorite_count, source, status, is_featured, install_guide, usage_examples) VALUES
+INSERT INTO tools (name, slug, description, detail, tool_type, platforms, category_id, tags, author, version, license, github_url, homepage_url, icon_url, quality_score, usage_count, favorite_count, source, status, is_featured, install_guide, usage_examples) VALUES
 -- 1. MCP Server: filesystem
 ('Filesystem MCP Server', 'filesystem-mcp-server',
  '基于 MCP 协议的文件系统服务器，支持文件读写、目录浏览等功能',
@@ -456,7 +456,7 @@ INSERT INTO skills (name, slug, description, detail, skill_type, platforms, cate
 ('AutoGen - Multi-Agent Framework', 'autogen-multi-agent',
  '微软开源的多智能体对话框架，支持 Agent 协作与代码执行',
  'AutoGen 是微软推出的开源多智能体框架，支持创建可定制的 AI Agent，实现 Agent 间的对话协作、代码执行、工具调用等。内置多种预设 Agent 模板，支持自定义 Agent 行为和工作流。',
- 'agent_skill', '["openai", "anthropic"]',
+ 'agent_tool', '["openai", "anthropic"]',
  (SELECT id FROM categories WHERE slug = 'agent-framework' LIMIT 1),
  '["autogen", "multi-agent", "collaboration", "code-execution", "microsoft"]',
  'Microsoft', '0.4.0', 'MIT',
@@ -471,7 +471,7 @@ INSERT INTO skills (name, slug, description, detail, skill_type, platforms, cate
 ('CrewAI - Agent 编排框架', 'crewai-agent-orchestration',
  '强大的 AI Agent 编排框架，支持角色定义、任务分配和团队协作',
  'CrewAI 是一个专注于 AI Agent 团队协作的编排框架。支持定义 Agent 角色、分配任务、设置工具，并自动协调 Agent 间的协作流程。适用于构建复杂的 AI 工作流自动化系统。',
- 'agent_skill', '["openai", "anthropic", "google"]',
+ 'agent_tool', '["openai", "anthropic", "google"]',
  (SELECT id FROM categories WHERE slug = 'agent-framework' LIMIT 1),
  '["crewai", "agent", "orchestration", "role-playing", "workflow"]',
  'CrewAI Inc.', '0.28.0', 'MIT',
@@ -486,7 +486,7 @@ INSERT INTO skills (name, slug, description, detail, skill_type, platforms, cate
 ('LangGraph - Agent 工作流框架', 'langgraph-agent-workflow',
  '基于图结构的 Agent 工作流框架，支持复杂状态管理和循环推理',
  'LangGraph 是 LangChain 团队推出的图结构 Agent 框架，支持构建有状态的、多步骤的 AI Agent 工作流。支持循环推理、分支逻辑、人机协作等高级特性。',
- 'agent_skill', '["openai", "anthropic", "google"]',
+ 'agent_tool', '["openai", "anthropic", "google"]',
  (SELECT id FROM categories WHERE slug = 'agent-framework' LIMIT 1),
  '["langgraph", "agent", "workflow", "state-machine", "langchain"]',
  'LangChain', '0.2.0', 'MIT',
@@ -576,7 +576,7 @@ INSERT INTO skills (name, slug, description, detail, skill_type, platforms, cate
 ('LlamaIndex - RAG 数据框架', 'llamaindex-rag-framework',
  '强大的 RAG 数据框架，支持多种数据源接入和索引策略',
  'LlamaIndex 是一个专注于数据接入和索引的 RAG 框架。支持 100+ 数据源连接器，提供多种索引策略（向量、树、列表等），内置查询引擎和路由机制。',
- 'agent_skill', '["openai", "anthropic", "google", "mistral"]',
+ 'agent_tool', '["openai", "anthropic", "google", "mistral"]',
  (SELECT id FROM categories WHERE slug = 'llamaindex' LIMIT 1),
  '["llamaindex", "rag", "data-connector", "indexing", "retrieval"]',
  'LlamaIndex', '0.10.0', 'MIT',
@@ -651,7 +651,7 @@ INSERT INTO skills (name, slug, description, detail, skill_type, platforms, cate
 ('LangChain - LLM 应用开发框架', 'langchain-llm-framework',
  '最流行的 LLM 应用开发框架，提供链式调用、Agent 和工具集成',
  'LangChain 是一个强大的 LLM 应用开发框架，提供了链式调用（Chains）、Agent、工具集成、记忆管理、文档加载等核心模块。支持多种 LLM 提供商和向量数据库。',
- 'agent_skill', '["openai", "anthropic", "google", "mistral"]',
+ 'agent_tool', '["openai", "anthropic", "google", "mistral"]',
  (SELECT id FROM categories WHERE slug = 'langchain' LIMIT 1),
  '["langchain", "llm", "chain", "agent", "tool-calling", "memory"]',
  'LangChain', '0.2.0', 'MIT',
@@ -694,8 +694,8 @@ CREATE TRIGGER trg_categories_updated
     BEFORE UPDATE ON categories
     FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
-CREATE TRIGGER trg_skills_updated
-    BEFORE UPDATE ON skills
+CREATE TRIGGER trg_tools_updated
+    BEFORE UPDATE ON tools
     FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 CREATE TRIGGER trg_users_updated

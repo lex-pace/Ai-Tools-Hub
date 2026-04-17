@@ -2,8 +2,8 @@ import { create } from "zustand";
 import { authApi, api } from "@/lib/api";
 import type { UserInfo } from "@/lib/types";
 
-const TOKEN_KEY = "ai-skills-hub-token";
-const USER_KEY = "ai-skills-hub-user";
+const TOKEN_KEY = "ai-tools-hub-token";
+const USER_KEY = "ai-tools-hub-user";
 
 interface AuthState {
   token: string | null;

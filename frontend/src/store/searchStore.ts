@@ -1,10 +1,10 @@
 import { create } from "zustand";
-import type { Skill, SearchFilters } from "@/lib/types";
+import type { Tool, SearchFilters } from "@/lib/types";
 
 interface SearchState {
   // 搜索状态
   query: string;
-  results: Skill[];
+  results: Tool[];
   total: number;
   page: number;
   pageSize: number;
@@ -22,7 +22,7 @@ interface SearchState {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   setResults: (results: {
-    items: Skill[];
+    items: Tool[];
     total: number;
     page: number;
     pageSize: number;

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Skills Hub — Neural Interface</title>
+<title>AI Tools Hub — Neural Interface</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   :root{
@@ -210,25 +210,25 @@
   .cat-name{font-weight:700;font-size:0.82rem;margin-bottom:0.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .cat-count{font-size:0.65rem;color:var(--text-lo)}
 
-  /* ═══ SKILL CARD — Holographic Projection ═══ */
-  .skill-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
-  .skill-card{position:relative;border-radius:16px;overflow:hidden;cursor:pointer;
+  /* ═══ TOOL CARD — Holographic Projection ═══ */
+  .tool-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
+  .tool-card{position:relative;border-radius:16px;overflow:hidden;cursor:pointer;
     background:var(--glass);border:1px solid var(--glass-border);backdrop-filter:blur(20px);
     transition:all 0.5s cubic-bezier(0.23,1,0.32,1);
     transform-style:preserve-3d;perspective:1000px}
   /* Holographic edge effect */
-  .skill-card::before{content:'';position:absolute;inset:-1px;border-radius:17px;z-index:-1;
+  .tool-card::before{content:'';position:absolute;inset:-1px;border-radius:17px;z-index:-1;
     background:conic-gradient(from var(--holo-angle,0deg),transparent 0%,var(--holo-1) 10%,transparent 20%,var(--holo-2) 40%,transparent 50%,var(--holo-3) 70%,transparent 80%);
     opacity:0;transition:opacity 0.5s;animation:holoRotate 4s linear infinite}
   @keyframes holoRotate{0%{--holo-angle:0deg}100%{--holo-angle:360deg}}
   /* Mouse-tracking light */
-  .skill-card::after{content:'';position:absolute;inset:0;border-radius:16px;
+  .tool-card::after{content:'';position:absolute;inset:0;border-radius:16px;
     background:radial-gradient(400px circle at var(--mx,50%) var(--my,50%),rgba(0,240,255,0.06),transparent 40%);
     opacity:0;transition:opacity 0.3s;pointer-events:none}
-  .skill-card:hover{transform:translateY(-8px) rotateX(2deg);
+  .tool-card:hover{transform:translateY(-8px) rotateX(2deg);
     border-color:rgba(0,240,255,0.15);box-shadow:0 25px 60px rgba(0,0,0,0.4),0 0 50px rgba(0,240,255,0.06)}
-  .skill-card:hover::before{opacity:1}
-  .skill-card:hover::after{opacity:1}
+  .tool-card:hover::before{opacity:1}
+  .tool-card:hover::after{opacity:1}
 
   .sc-inner{padding:1.5rem;position:relative;z-index:1}
   .sc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.85rem}
@@ -242,13 +242,13 @@
     box-shadow:0 0 12px rgba(236,72,153,0.15)}
 
   .sc-name{font-size:1.1rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:0.5rem;transition:all 0.3s}
-  .skill-card:hover .sc-name{color:var(--cyan);text-shadow:0 0 20px rgba(0,240,255,0.2)}
+  .tool-card:hover .sc-name{color:var(--cyan);text-shadow:0 0 20px rgba(0,240,255,0.2)}
   .sc-desc{font-size:0.8rem;color:var(--text-mid);line-height:1.6;margin-bottom:0.85rem;
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .sc-tags{display:flex;gap:0.3rem;flex-wrap:wrap;margin-bottom:0.85rem}
   .sc-tag{padding:2px 7px;border-radius:4px;font-size:0.62rem;background:rgba(255,255,255,0.02);color:var(--text-lo);
     border:1px solid rgba(255,255,255,0.04);transition:all 0.3s}
-  .skill-card:hover .sc-tag{border-color:rgba(0,240,255,0.08);color:var(--text-mid)}
+  .tool-card:hover .sc-tag{border-color:rgba(0,240,255,0.08);color:var(--text-mid)}
   .sc-meta{display:flex;gap:0.75rem;align-items:center;font-size:0.7rem;color:var(--text-lo);margin-bottom:0.85rem}
   .sc-meta span{display:flex;align-items:center;gap:0.25rem}
   .sc-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(0,240,255,0.08),transparent);margin-bottom:0.85rem}
@@ -262,9 +262,9 @@
 
   /* Data flow indicator on card */
   .sc-flow{position:absolute;top:0;right:0;width:60px;height:60px;pointer-events:none;opacity:0;transition:opacity 0.4s}
-  .skill-card:hover .sc-flow{opacity:1}
+  .tool-card:hover .sc-flow{opacity:1}
   .sc-flow-dot{position:absolute;width:3px;height:3px;border-radius:50%;background:var(--cyan);opacity:0}
-  .skill-card:hover .sc-flow-dot{animation:flowDot 2s infinite}
+  .tool-card:hover .sc-flow-dot{animation:flowDot 2s infinite}
   .sc-flow-dot:nth-child(1){top:10px;right:20px;animation-delay:0s}
   .sc-flow-dot:nth-child(2){top:20px;right:35px;animation-delay:0.3s}
   .sc-flow-dot:nth-child(3){top:30px;right:15px;animation-delay:0.6s}
@@ -545,7 +545,7 @@
         <defs><linearGradient id="lg1" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#00f0ff"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
       </svg>
     </div>
-    <div class="nav-logo-text">Skills Hub</div>
+    <div class="nav-logo-text">Tools Hub</div>
   </div>
   <div class="nav-links">
     <a class="nav-link active">首页</a>
@@ -598,7 +598,7 @@
   </div>
 
   <div class="live-stats">
-    <div class="live-stat"><div class="live-stat-val" data-target="527">0</div><div class="live-stat-label">Skills</div></div>
+    <div class="live-stat"><div class="live-stat-val" data-target="527">0</div><div class="live-stat-label">Tools</div></div>
     <div class="live-stat"><div class="live-stat-val" data-target="48">0</div><div class="live-stat-label">Categories</div></div>
     <div class="live-stat"><div class="live-stat-val" data-target="12">0</div><div class="live-stat-label">Ecosystems</div></div>
     <div class="live-stat"><div class="live-stat-val" data-target="8923">0</div><div class="live-stat-label">Users</div></div>
@@ -611,14 +611,14 @@
     <a class="sec-more">查看全部 →</a>
   </div>
   <div class="cat-grid">
-    <div class="cat-node reveal reveal-delay-1"><div class="cat-icon ci-1">🤖</div><div class="cat-info"><div class="cat-name">AI/ML 工具</div><div class="cat-count">128 skills</div></div></div>
-    <div class="cat-node reveal reveal-delay-1"><div class="cat-icon ci-2">🔗</div><div class="cat-info"><div class="cat-name">API 工具</div><div class="cat-count">86 skills</div></div></div>
-    <div class="cat-node reveal reveal-delay-2"><div class="cat-icon ci-3">📊</div><div class="cat-info"><div class="cat-name">数据分析</div><div class="cat-count">64 skills</div></div></div>
-    <div class="cat-node reveal reveal-delay-2"><div class="cat-icon ci-4">💻</div><div class="cat-info"><div class="cat-name">代码生成</div><div class="cat-count">92 skills</div></div></div>
-    <div class="cat-node reveal reveal-delay-3"><div class="cat-icon ci-5">📝</div><div class="cat-info"><div class="cat-name">内容创作</div><div class="cat-count">53 skills</div></div></div>
-    <div class="cat-node reveal reveal-delay-3"><div class="cat-icon ci-6">🎨</div><div class="cat-info"><div class="cat-name">设计工具</div><div class="cat-count">41 skills</div></div></div>
-    <div class="cat-node reveal reveal-delay-4"><div class="cat-icon ci-7">🔧</div><div class="cat-info"><div class="cat-name">DevOps</div><div class="cat-count">37 skills</div></div></div>
-    <div class="cat-node reveal reveal-delay-4"><div class="cat-icon ci-8">🔒</div><div class="cat-info"><div class="cat-name">安全</div><div class="cat-count">29 skills</div></div></div>
+    <div class="cat-node reveal reveal-delay-1"><div class="cat-icon ci-1">🤖</div><div class="cat-info"><div class="cat-name">AI/ML 工具</div><div class="cat-count">128 tools</div></div></div>
+    <div class="cat-node reveal reveal-delay-1"><div class="cat-icon ci-2">🔗</div><div class="cat-info"><div class="cat-name">API 工具</div><div class="cat-count">86 tools</div></div></div>
+    <div class="cat-node reveal reveal-delay-2"><div class="cat-icon ci-3">📊</div><div class="cat-info"><div class="cat-name">数据分析</div><div class="cat-count">64 tools</div></div></div>
+    <div class="cat-node reveal reveal-delay-2"><div class="cat-icon ci-4">💻</div><div class="cat-info"><div class="cat-name">代码生成</div><div class="cat-count">92 tools</div></div></div>
+    <div class="cat-node reveal reveal-delay-3"><div class="cat-icon ci-5">📝</div><div class="cat-info"><div class="cat-name">内容创作</div><div class="cat-count">53 tools</div></div></div>
+    <div class="cat-node reveal reveal-delay-3"><div class="cat-icon ci-6">🎨</div><div class="cat-info"><div class="cat-name">设计工具</div><div class="cat-count">41 tools</div></div></div>
+    <div class="cat-node reveal reveal-delay-4"><div class="cat-icon ci-7">🔧</div><div class="cat-info"><div class="cat-name">DevOps</div><div class="cat-count">37 tools</div></div></div>
+    <div class="cat-node reveal reveal-delay-4"><div class="cat-icon ci-8">🔒</div><div class="cat-info"><div class="cat-name">安全</div><div class="cat-count">29 tools</div></div></div>
   </div>
 </div>
 
@@ -627,8 +627,8 @@
     <div class="sec-title"><div class="sec-title-icon t2">🔥</div> 热门技能</div>
     <a class="sec-more">查看全部 →</a>
   </div>
-  <div class="skill-grid">
-    <div class="skill-card reveal reveal-delay-1">
+  <div class="tool-grid">
+    <div class="tool-card reveal reveal-delay-1">
       <div class="sc-flow"><div class="sc-flow-dot"></div><div class="sc-flow-dot"></div><div class="sc-flow-dot"></div><div class="sc-flow-dot"></div></div>
       <div class="sc-inner">
         <div class="sc-top">
@@ -646,7 +646,7 @@
         </div>
       </div>
     </div>
-    <div class="skill-card reveal reveal-delay-2">
+    <div class="tool-card reveal reveal-delay-2">
       <div class="sc-flow"><div class="sc-flow-dot"></div><div class="sc-flow-dot"></div><div class="sc-flow-dot"></div><div class="sc-flow-dot"></div></div>
       <div class="sc-inner">
         <div class="sc-top">
@@ -664,7 +664,7 @@
         </div>
       </div>
     </div>
-    <div class="skill-card reveal reveal-delay-3">
+    <div class="tool-card reveal reveal-delay-3">
       <div class="sc-flow"><div class="sc-flow-dot"></div><div class="sc-flow-dot"></div><div class="sc-flow-dot"></div><div class="sc-flow-dot"></div></div>
       <div class="sc-inner">
         <div class="sc-top">
@@ -682,7 +682,7 @@
         </div>
       </div>
     </div>
-    <div class="skill-card reveal reveal-delay-4">
+    <div class="tool-card reveal reveal-delay-4">
       <div class="sc-flow"><div class="sc-flow-dot"></div><div class="sc-flow-dot"></div><div class="sc-flow-dot"></div><div class="sc-flow-dot"></div></div>
       <div class="sc-inner">
         <div class="sc-top">
@@ -705,12 +705,12 @@
 
 <footer class="footer">
   <div class="footer-inner">
-    <div><div class="footer-brand">AI Skills Hub</div><div class="footer-desc">跨生态系统的 AI 技能搜索聚合平台，发现最适合你的智能工具。</div></div>
+    <div><div class="footer-brand">AI Tools Hub</div><div class="footer-desc">跨生态系统的 AI 工具搜索聚合平台，发现最适合你的智能工具。</div></div>
     <div><div class="footer-col-title">产品</div><div class="footer-links"><a href="#">探索</a><a href="#">分类</a><a href="#">排行榜</a><a href="#">提交技能</a></div></div>
     <div><div class="footer-col-title">资源</div><div class="footer-links"><a href="#">API 文档</a><a href="#">GitHub</a><a href="#">状态</a></div></div>
     <div><div class="footer-col-title">关于</div><div class="footer-links"><a href="#">关于我们</a><a href="#">联系方式</a><a href="#">隐私政策</a></div></div>
   </div>
-  <div class="footer-bottom">© 2026 AI Skills Hub. All rights reserved.</div>
+  <div class="footer-bottom">© 2026 AI Tools Hub. All rights reserved.</div>
 </footer>
 
 <!-- ═══════════════════════════════════════════════════════════
@@ -877,11 +877,11 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════
-     PAGE 3: SKILL DETAIL
+     PAGE 3: TOOL DETAIL
      ═══════════════════════════════════════════════════════════ -->
 <div class="neural-bridge">
   <div class="bridge-node"></div><div class="bridge-node"></div><div class="bridge-node"></div><div class="bridge-node"></div>
-  <div class="bridge-label">PAGE 3 — SKILL DETAIL</div>
+  <div class="bridge-label">PAGE 3 — TOOL DETAIL</div>
 </div>
 
 <div class="detail-layout">
@@ -1171,7 +1171,7 @@
   animate();
 
   // ═══ CARD MOUSE TRACKING ═══
-  document.querySelectorAll('.skill-card').forEach(card => {
+  document.querySelectorAll('.tool-card').forEach(card => {
     card.addEventListener('mousemove', e => {
       const rect = card.getBoundingClientRect();
       card.style.setProperty('--mx', (e.clientX - rect.left) + 'px');
@@ -1248,7 +1248,7 @@
   let holoAngle = 0;
   function updateHolo(){
     holoAngle = (holoAngle + 0.5) % 360;
-    document.querySelectorAll('.skill-card, .result-card').forEach(card => {
+    document.querySelectorAll('.tool-card, .result-card').forEach(card => {
       card.style.setProperty('--holo-angle', holoAngle + 'deg');
     });
     requestAnimationFrame(updateHolo);

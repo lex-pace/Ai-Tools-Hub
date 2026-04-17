@@ -1,1 +1,1 @@
-"""AI Skills Hub — Schema 包"""
+"""AI Tools Hub — Schema 包"""

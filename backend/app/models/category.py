@@ -1,4 +1,4 @@
-"""AI Skills Hub — 分类模型（对应 categories 表）"""
+"""AI Tools Hub — 分类模型（对应 categories 表）"""
 import uuid
 from datetime import datetime
 from typing import Optional, List
@@ -59,8 +59,8 @@ class Category(Base):
     children: Mapped[List["Category"]] = relationship(
         "Category", back_populates="parent", lazy="selectin"
     )
-    skills: Mapped[List["Skill"]] = relationship(
-        "Skill", back_populates="category", lazy="noload"
+    tools: Mapped[List["Tool"]] = relationship(
+        "Tool", back_populates="category", lazy="noload"
     )
 
     # ── 索引 ──────────────────────────────────────────
@@ -75,4 +75,4 @@ class Category(Base):
 
 
 # 避免循环导入，在模块级别建立前向引用
-from app.models.skill import Skill  # noqa: E402, F401
+from app.models.tool import Tool  # noqa: E402, F401

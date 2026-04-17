@@ -1,11 +1,11 @@
 "use client";
 
 import { Loader2, SearchX } from "lucide-react";
-import SkillCard from "@/components/home/SkillCard";
-import type { Skill } from "@/lib/types";
+import ToolCard from "@/components/home/ToolCard";
+import type { Tool } from "@/lib/types";
 
 interface ResultListProps {
-  skills: Skill[];
+  tools: Tool[];
   loading?: boolean;
   error?: string | null;
   total?: number;
@@ -14,7 +14,7 @@ interface ResultListProps {
 }
 
 export default function ResultList({
-  skills,
+  tools,
   loading = false,
   error = null,
   total,
@@ -39,12 +39,12 @@ export default function ResultList({
     );
   }
 
-  if (skills.length === 0) {
+  if (tools.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <SearchX className="mb-4 h-12 w-12 text-muted-foreground/30" />
         <p className="text-muted-foreground mb-1">
-          {emptyMessage || "没有找到相关技能，试试其他关键词？"}
+          {emptyMessage || "没有找到相关工具，试试其他关键词？"}
         </p>
         {query && (
           <p className="text-sm text-muted-foreground">
@@ -68,8 +68,8 @@ export default function ResultList({
         </p>
       )}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {skills.map((skill) => (
-          <SkillCard key={skill.id} skill={skill} />
+        {tools.map((tool) => (
+          <ToolCard key={tool.id} tool={tool} />
         ))}
       </div>
     </div>

@@ -13,7 +13,7 @@ class CrawlResult:
     name: str
     description: str
     detail: str = ""
-    skill_type: str = "mcp_server"  # mcp_server | custom_gpt | agent_skill | prompt_template
+    tool_type: str = "mcp_server"  # mcp_server | custom_gpt | agent_tool | prompt_template
     platforms: list = field(default_factory=list)
     tags: list = field(default_factory=list)
     author: str = ""

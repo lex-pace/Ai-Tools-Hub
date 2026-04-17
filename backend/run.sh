@@ -1,10 +1,10 @@
 #!/bin/bash
-# AI Skills Hub — 本地启动后端
+# AI Tools Hub — 本地启动后端
 # 用法: cd backend && bash run.sh
 
 set -e
 
-echo "=== AI Skills Hub 后端启动 ==="
+echo "=== AI Tools Hub 后端启动 ==="
 
 # 检查 .env
 if [ ! -f .env ]; then

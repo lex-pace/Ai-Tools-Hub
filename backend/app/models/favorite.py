@@ -1,4 +1,4 @@
-"""AI Skills Hub — 收藏模型（对应 favorites 表）"""
+"""AI Tools Hub — 收藏模型（对应 favorites 表）"""
 import uuid
 from datetime import datetime
 from typing import Optional
@@ -12,7 +12,7 @@ from app.core.database import Base
 
 
 class Favorite(Base):
-    """收藏表 — 用户收藏技能"""
+    """收藏表 — 用户收藏工具"""
 
     __tablename__ = "favorites"
 
@@ -30,11 +30,11 @@ class Favorite(Base):
         nullable=False,
         comment="用户 ID",
     )
-    skill_id: Mapped[uuid.UUID] = mapped_column(
+    tool_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("skills.id", ondelete="CASCADE"),
+        ForeignKey("tools.id", ondelete="CASCADE"),
         nullable=False,
-        comment="技能 ID",
+        comment="工具 ID",
     )
 
     # ── 分组 ──────────────────────────────────────────
@@ -49,13 +49,13 @@ class Favorite(Base):
 
     # ── 关系 ──────────────────────────────────────────
     user: Mapped["User"] = relationship("User", back_populates="favorites", lazy="selectin")
-    skill: Mapped["Skill"] = relationship("Skill", back_populates="favorites", lazy="selectin")
+    tool: Mapped["Tool"] = relationship("Tool", back_populates="favorites", lazy="selectin")
 
     # ── 约束与索引 ────────────────────────────────────
     __table_args__ = (
-        UniqueConstraint("user_id", "skill_id", "group_name", name="uq_favorite_user_skill_group"),
+        UniqueConstraint("user_id", "tool_id", "group_name", name="uq_favorite_user_tool_group"),
         Index("idx_favorites_user", "user_id"),
     )
 
     def __repr__(self) -> str:
-        return f"<Favorite user={self.user_id} skill={self.skill_id}>"
+        return f"<Favorite user={self.user_id} tool={self.tool_id}>"

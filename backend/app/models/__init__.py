@@ -1,6 +1,6 @@
-"""AI Skills Hub — 数据模型包"""
+"""AI Tools Hub — 数据模型包"""
 from app.models.category import Category
-from app.models.skill import Skill
+from app.models.tool import Tool
 from app.models.user import User
 from app.models.favorite import Favorite
 from app.models.review import Review
@@ -9,7 +9,7 @@ from app.models.crawl_task import CrawlTask
 
 __all__ = [
     "Category",
-    "Skill",
+    "Tool",
     "User",
     "Favorite",
     "Review",

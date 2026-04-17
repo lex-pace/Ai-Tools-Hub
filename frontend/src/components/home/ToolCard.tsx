@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import { Star, Heart, Eye } from "lucide-react";
-import { PLATFORM_MAP, SKILL_TYPE_MAP, SKILL_TYPE_COLORS, type Skill } from "@/lib/types";
+import { PLATFORM_MAP, TOOL_TYPE_MAP, TOOL_TYPE_COLORS, type Tool } from "@/lib/types";
 import { formatNumber, truncateText } from "@/lib/utils";
 import { isFavorite, addFavorite, removeFavorite, favoriteApi } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useState, useEffect, useCallback, useRef } from "react";
 
-interface SkillCardProps { skill: Skill; }
+interface ToolCardProps { tool: Tool; }
 
-export default function SkillCard({ skill }: SkillCardProps) {
+export default function ToolCard({ tool }: ToolCardProps) {
   const [favorited, setFavorited] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const [mx, setMx] = useState("50%");
@@ -20,19 +20,19 @@ export default function SkillCard({ skill }: SkillCardProps) {
 
   useEffect(() => {
     if (isAuthenticated) {
-      favoriteApi.check(skill.id).then((res) => {
+      favoriteApi.check(tool.id).then((res) => {
         const d = res.data?.data;
         setFavorited(!!d?.is_favorite || !!d?.favorited || d === true);
-      }).catch(() => setFavorited(isFavorite(skill.id)));
-    } else { setFavorited(isFavorite(skill.id)); }
-  }, [skill.id, isAuthenticated]);
+      }).catch(() => setFavorited(isFavorite(tool.id)));
+    } else { setFavorited(isFavorite(tool.id)); }
+  }, [tool.id, isAuthenticated]);
 
   useEffect(() => {
-    const h = () => { if (!isAuthenticated) setFavorited(isFavorite(skill.id)); };
+    const h = () => { if (!isAuthenticated) setFavorited(isFavorite(tool.id)); };
     window.addEventListener("storage", h);
     window.addEventListener("favorites-changed", h);
     return () => { window.removeEventListener("storage", h); window.removeEventListener("favorites-changed", h); };
-  }, [skill.id, isAuthenticated]);
+  }, [tool.id, isAuthenticated]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!cardRef.current) return;
@@ -46,16 +46,16 @@ export default function SkillCard({ skill }: SkillCardProps) {
     if (favoriteLoading) return;
     setFavoriteLoading(true);
     try {
-      if (isAuthenticated) { favorited ? await favoriteApi.remove(skill.id) : await favoriteApi.add(skill.id); }
-      else { favorited ? removeFavorite(skill.id) : addFavorite(skill.id); }
+      if (isAuthenticated) { favorited ? await favoriteApi.remove(tool.id) : await favoriteApi.add(tool.id); }
+      else { favorited ? removeFavorite(tool.id) : addFavorite(tool.id); }
       setFavorited(!favorited);
       window.dispatchEvent(new Event("favorites-changed"));
     } catch (err) { console.error("Failed to toggle favorite:", err); }
     finally { setFavoriteLoading(false); }
-  }, [favorited, skill.id, isAuthenticated, favoriteLoading]);
+  }, [favorited, tool.id, isAuthenticated, favoriteLoading]);
 
-  const platformInfo = PLATFORM_MAP[skill.platform] || PLATFORM_MAP.general;
-  const typeLabel = SKILL_TYPE_MAP[skill.type] || skill.type;
+  const platformInfo = PLATFORM_MAP[tool.platform] || PLATFORM_MAP.general;
+  const typeLabel = TOOL_TYPE_MAP[tool.type] || tool.type;
 
   const renderStars = (score: number) => {
     const stars = [];
@@ -70,7 +70,7 @@ export default function SkillCard({ skill }: SkillCardProps) {
   };
 
   return (
-    <Link href={`/skills/${skill.id}`} className="block">
+    <Link href={`/tools/${tool.id}`} className="block">
       <div ref={cardRef} onMouseMove={handleMouseMove} className="group relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-[500ms] hover:-translate-y-2" style={{ background: "var(--glass)", border: "1px solid var(--glass-border)", backdropFilter: "blur(20px)" }}>
         {/* Holographic border */}
         <div className="absolute inset-[-1px] rounded-[17px] z-[-1] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{ background: "conic-gradient(from 0deg, transparent 0%, var(--holo-1) 10%, transparent 20%, var(--holo-2) 40%, transparent 50%, var(--holo-3) 70%, transparent 80%)", animation: "holoShimmer 4s linear infinite" }} />
@@ -96,15 +96,15 @@ export default function SkillCard({ skill }: SkillCardProps) {
           </div>
 
           {/* Name */}
-          <h3 className="text-lg font-extrabold tracking-tight mb-2 transition-colors group-hover:text-[var(--cyan)]" style={{ textShadow: "none" }}>{skill.name}</h3>
+          <h3 className="text-lg font-extrabold tracking-tight mb-2 transition-colors group-hover:text-[var(--cyan)]" style={{ textShadow: "none" }}>{tool.name}</h3>
 
           {/* Description */}
-          <p className="text-sm mb-3 line-clamp-2" style={{ color: "var(--text-mid)", lineHeight: "1.6" }}>{truncateText(skill.description, 100)}</p>
+          <p className="text-sm mb-3 line-clamp-2" style={{ color: "var(--text-mid)", lineHeight: "1.6" }}>{truncateText(tool.description, 100)}</p>
 
           {/* Tags */}
-          {skill.tags.length > 0 && (
+          {tool.tags.length > 0 && (
             <div className="flex gap-1.5 flex-wrap mb-3">
-              {skill.tags.slice(0, 4).map((tag) => (
+              {tool.tags.slice(0, 4).map((tag) => (
                 <span key={tag} className="px-2 py-0.5 rounded text-[11px] transition-all group-hover:border-[rgba(0,240,255,0.08)]" style={{ background: "rgba(255,255,255,0.02)", color: "var(--text-lo)", border: "1px solid rgba(255,255,255,0.04)" }}>{tag}</span>
               ))}
             </div>
@@ -112,7 +112,7 @@ export default function SkillCard({ skill }: SkillCardProps) {
 
           {/* Meta */}
           <div className="flex gap-3 items-center text-xs mb-3" style={{ color: "var(--text-lo)" }}>
-            <span className="flex items-center gap-1">👤 {skill.author || "unknown"}</span>
+            <span className="flex items-center gap-1">👤 {tool.author || "unknown"}</span>
             <span>·</span>
             <span>{platformInfo.name}</span>
           </div>
@@ -123,12 +123,12 @@ export default function SkillCard({ skill }: SkillCardProps) {
           {/* Bottom: rating + stats */}
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-1.5">
-              <div className="flex gap-0.5">{renderStars(Number(skill.rating?.score) || 0)}</div>
-              <span className="text-sm font-bold" style={{ color: "var(--cyan)" }}>{(Number(skill.rating?.score) || 0).toFixed(1)}</span>
-              <span className="text-[11px]" style={{ color: "var(--text-lo)" }}>({formatNumber(skill.rating?.count || 0)})</span>
+              <div className="flex gap-0.5">{renderStars(Number(tool.rating?.score) || 0)}</div>
+              <span className="text-sm font-bold" style={{ color: "var(--cyan)" }}>{(Number(tool.rating?.score) || 0).toFixed(1)}</span>
+              <span className="text-[11px]" style={{ color: "var(--text-lo)" }}>({formatNumber(tool.rating?.count || 0)})</span>
             </div>
             <div className="flex gap-2.5">
-              <span className="text-[11px] flex items-center gap-1" style={{ color: "var(--text-lo)" }}>⭐ {formatNumber(skill.usageCount)}</span>
+              <span className="text-[11px] flex items-center gap-1" style={{ color: "var(--text-lo)" }}>⭐ {formatNumber(tool.usageCount)}</span>
             </div>
           </div>
         </div>

@@ -25,11 +25,11 @@ logger = logging.getLogger(__name__)
 
 
 async def main():
-    parser = argparse.ArgumentParser(description="AI Skills Hub 全量数据采集")
+    parser = argparse.ArgumentParser(description="AI Tools Hub 全量数据采集")
     parser.add_argument("--source", default="github", choices=["github", "gitee"], help="采集源")
     parser.add_argument("--max", type=int, default=30, help="每个关键词最大采集数")
     parser.add_argument("--delay", type=float, default=3.0, help="查询间隔（秒）")
-    parser.add_argument("--clean", action="store_true", help="采集前清理旧数据（清空 skills 表 + 重建 ES 索引）")
+    parser.add_argument("--clean", action="store_true", help="采集前清理旧数据（清空 tools 表 + 重建 ES 索引）")
     args = parser.parse_args()
 
     logger.info(f"=== 全量采集开始 ===")

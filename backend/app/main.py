@@ -1,4 +1,4 @@
-"""AI Skills Hub — FastAPI 应用入口"""
+"""AI Tools Hub — FastAPI 应用入口"""
 import logging
 import traceback
 
@@ -36,7 +36,7 @@ async def lifespan(app: FastAPI):
 
     print(f"""
     ╔══════════════════════════════════════════════╗
-    ║       AI Skills Hub API 已启动                ║
+    ║       AI Tools Hub API 已启动                ║
     ╠══════════════════════════════════════════════╣
     ║  模式:   {settings.APP_MODE:<37s}║
     ║  数据库: {settings.DATABASE_URL:<37s}║
@@ -53,12 +53,12 @@ async def lifespan(app: FastAPI):
     await close_es_client()
     await close_redis_client()
     await close_llm_service()
-    print("AI Skills Hub API 已关闭")
+    print("AI Tools Hub API 已关闭")
 
 
 app = FastAPI(
-    title="AI Skills Hub API",
-    description="AI Skills 搜索聚合平台 API",
+    title="AI Tools Hub API",
+    description="AI Tools 搜索聚合平台 API",
     version="0.1.0",
     docs_url="/docs",
     redoc_url="/redoc",
@@ -177,7 +177,7 @@ async def health_check():
 @app.get("/api/v1/info")
 async def info():
     return {
-        "app": "AI Skills Hub",
+        "app": "AI Tools Hub",
         "version": "0.1.0",
         "mode": settings.APP_MODE,
         "llm_provider": settings.LLM_PROVIDER,

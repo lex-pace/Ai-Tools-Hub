@@ -1,8 +1,8 @@
-"""AI Skills Hub — 推荐 Schema"""
+"""AI Tools Hub — 推荐 Schema"""
 from pydantic import BaseModel, Field
 from typing import Optional
 
-from app.schemas.skill import SkillList
+from app.schemas.tool import ToolList
 from app.schemas.common import PaginationOut
 
 
@@ -20,5 +20,5 @@ class RecommendResponse(BaseModel):
     reasoning: str = Field(default="", description="AI 推荐理由")
     keywords: list[str] = Field(default_factory=list, description="提取的关键词")
     suggested_query: str = Field(default="", description="建议搜索词")
-    data: list[SkillList] = Field(default_factory=list, description="推荐结果列表")
+    data: list[ToolList] = Field(default_factory=list, description="推荐结果列表")
     pagination: Optional[PaginationOut] = Field(default=None, description="分页信息")

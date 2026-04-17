@@ -1,4 +1,4 @@
-"""AI Skills Hub — 配置管理（支持多环境）"""
+"""AI Tools Hub — 配置管理（支持多环境）"""
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 
@@ -84,7 +84,7 @@ class Settings(BaseSettings):
         else:
             host = self.DB_HOST_LOCAL
             port = self.DB_PORT_LOCAL
-        return f"postgresql+asyncpg://skills:skills123@{host}:{port}/skills_hub"
+        return f"postgresql+asyncpg://tools:tools123@{host}:{port}/tools_hub"
 
     @property
     def SYNC_DATABASE_URL(self) -> str:
@@ -94,7 +94,7 @@ class Settings(BaseSettings):
         else:
             host = self.DB_HOST_LOCAL
             port = self.DB_PORT_LOCAL
-        return f"postgresql://skills:skills123@{host}:{port}/skills_hub"
+        return f"postgresql://tools:tools123@{host}:{port}/tools_hub"
 
     @property
     def REDIS_URL(self) -> str:

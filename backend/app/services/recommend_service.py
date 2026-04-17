@@ -1,8 +1,8 @@
-"""智能推荐服务 — 基于 LLM 理解用户意图并推荐 Skills
+"""智能推荐服务 — 基于 LLM 理解用户意图并推荐 Tools
 
 流程：
-1. 调用 LLM 分析用户意图，提取关键词、技能类型、分类等
-2. 用提取的关键词搜索 Skills（优先 ES，降级 PG）
+1. 调用 LLM 分析用户意图，提取关键词、工具类型、分类等
+2. 用提取的关键词搜索 Tools（优先 ES，降级 PG）
 3. 返回推荐结果 + LLM 推荐理由
 """
 import json
@@ -13,9 +13,9 @@ from typing import Optional
 from sqlalchemy import select, func, or_, case
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.skill import Skill
+from app.models.tool import Tool
 from app.models.category import Category
-from app.schemas.skill import SkillList
+from app.schemas.tool import ToolList
 from app.schemas.common import PaginationOut
 from app.services.llm_service import get_llm_service
 
@@ -23,16 +23,16 @@ logger = logging.getLogger(__name__)
 
 # ── 推荐系统提示词 ──────────────────────────────────────────────────
 
-RECOMMEND_SYSTEM_PROMPT = """你是一个 AI Skills 推荐专家。用户会描述他们的需求，你需要：
+RECOMMEND_SYSTEM_PROMPT = """你是一个 AI Tools 推荐专家。用户会描述他们的需求，你需要：
 1. 理解用户的需求场景
 2. 提取关键搜索词（英文，用于搜索匹配）
-3. 推荐最合适的技能类型（mcp_server/custom_gpt/agent_skill/prompt_template）
+3. 推荐最合适的工具类型（mcp_server/custom_gpt/agent_tool/prompt_template）
 4. 给出推荐理由
 
 请以 JSON 格式回复：
 {
     "keywords": ["关键词1", "关键词2", "关键词3"],
-    "skill_types": ["mcp_server", "agent_skill"],
+    "tool_types": ["mcp_server", "agent_tool"],
     "category_slugs": ["programming", "data-analysis"],
     "reasoning": "用户需要一个能...",
     "suggested_query": "推荐的搜索词"
@@ -51,7 +51,7 @@ async def smart_recommend(
     智能推荐入口
 
     1. 调用 LLM 分析用户意图
-    2. 用提取的关键词搜索 Skills（优先 ES，降级 PG）
+    2. 用提取的关键词搜索 Tools（优先 ES，降级 PG）
     3. 返回推荐结果 + LLM 推荐理由
 
     返回:
@@ -59,7 +59,7 @@ async def smart_recommend(
         "reasoning": "LLM 推荐理由",
         "keywords": ["关键词列表"],
         "suggested_query": "建议搜索词",
-        "data": [SkillList...],
+        "data": [ToolList...],
         "pagination": PaginationOut
     }
     """
@@ -81,7 +81,7 @@ async def smart_recommend(
         items, pagination = await _search_by_keywords(
             db=db,
             keywords=[user_query],
-            skill_types=None,
+            tool_types=None,
             category_slugs=None,
             page=page,
             size=size,
@@ -94,7 +94,7 @@ async def smart_recommend(
         return default_result
 
     keywords = intent.get("keywords", [])
-    skill_types = intent.get("skill_types", [])
+    tool_types = intent.get("tool_types", [])
     category_slugs = intent.get("category_slugs", [])
     reasoning = intent.get("reasoning", "")
     suggested_query = intent.get("suggested_query", user_query)
@@ -105,14 +105,14 @@ async def smart_recommend(
 
     logger.info(
         f"LLM 意图分析完成: keywords={keywords}, "
-        f"skill_types={skill_types}, category_slugs={category_slugs}"
+        f"tool_types={tool_types}, category_slugs={category_slugs}"
     )
 
-    # ── 第二步：根据关键词搜索 Skills ─────────────────
+    # ── 第二步：根据关键词搜索 Tools ─────────────────
     items, pagination = await _search_by_keywords(
         db=db,
         keywords=keywords,
-        skill_types=skill_types if skill_types else None,
+        tool_types=tool_types if tool_types else None,
         category_slugs=category_slugs if category_slugs else None,
         page=page,
         size=size,
@@ -167,7 +167,7 @@ async def _analyze_intent(user_query: str) -> Optional[dict]:
 
         # 确保关键字段存在
         intent.setdefault("keywords", [])
-        intent.setdefault("skill_types", [])
+        intent.setdefault("tool_types", [])
         intent.setdefault("category_slugs", [])
         intent.setdefault("reasoning", "")
         intent.setdefault("suggested_query", user_query)
@@ -209,17 +209,17 @@ def _extract_json(text: str) -> Optional[str]:
 async def _search_by_keywords(
     db: AsyncSession,
     keywords: list[str],
-    skill_types: Optional[list[str]] = None,
+    tool_types: Optional[list[str]] = None,
     category_slugs: Optional[list[str]] = None,
     page: int = 1,
     size: int = 10,
-) -> tuple[list[SkillList], PaginationOut]:
+) -> tuple[list[ToolList], PaginationOut]:
     """
-    根据 LLM 提取的关键词搜索 Skills
+    根据 LLM 提取的关键词搜索 Tools
 
     - 优先使用 ES 搜索（OR 组合多个关键词）
     - ES 不可用时降级到 PostgreSQL LIKE 模糊匹配
-    - 可选按 skill_type 和 category 过滤
+    - 可选按 tool_type 和 category 过滤
     - 返回 (items, pagination)
     """
     if not keywords:
@@ -230,39 +230,39 @@ async def _search_by_keywords(
 
     # ── 尝试 ES 搜索 ─────────────────────────────────
     try:
-        from app.services.es_service import get_skill_ids_by_query
+        from app.services.es_service import get_tool_ids_by_query
 
         # 构建 ES 过滤参数
         es_filters = {}
-        if skill_types and len(skill_types) == 1:
-            es_filters["skill_type"] = skill_types[0]
+        if tool_types and len(tool_types) == 1:
+            es_filters["tool_type"] = tool_types[0]
         if category_slugs and len(category_slugs) == 1:
             es_filters["category_slug"] = category_slugs[0]
 
-        skill_ids, es_total = await get_skill_ids_by_query(
+        tool_ids, es_total = await get_tool_ids_by_query(
             query=combined_query,
-            skill_type=es_filters.get("skill_type"),
+            tool_type=es_filters.get("tool_type"),
             sort="quality_score",
             page=page,
             size=size,
         )
 
-        if skill_ids is not None:
-            if not skill_ids:
+        if tool_ids is not None:
+            if not tool_ids:
                 return [], PaginationOut.create(page=page, size=size, total=0)
 
             # 用 ES 返回的 ID 从 PG 查完整数据
-            id_order = {str(sid): idx for idx, sid in enumerate(skill_ids)}
+            id_order = {str(sid): idx for idx, sid in enumerate(tool_ids)}
 
-            stmt = select(Skill).where(
-                Skill.id.in_(skill_ids),
-                Skill.status == "active",
+            stmt = select(Tool).where(
+                Tool.id.in_(tool_ids),
+                Tool.status == "active",
             )
 
             # 按 ES 返回顺序排序
             order_case = case(
                 *[
-                    (Skill.id == sid, idx)
+                    (Tool.id == sid, idx)
                     for sid, idx in id_order.items()
                 ],
                 else_=999999,
@@ -270,9 +270,9 @@ async def _search_by_keywords(
             stmt = stmt.order_by(order_case)
 
             result = await db.execute(stmt)
-            skills = result.scalars().all()
+            tools = result.scalars().all()
 
-            items = [SkillList.model_validate(s) for s in skills]
+            items = [ToolList.model_validate(s) for s in tools]
             pagination = PaginationOut.create(page=page, size=size, total=es_total or 0)
 
             logger.info(f"ES 智能推荐搜索: query='{combined_query}', 匹配 {es_total} 条")
@@ -289,19 +289,19 @@ async def _search_by_keywords(
     for keyword in keywords:
         like_pattern = f"%{keyword}%"
         conditions.extend([
-            Skill.name.ilike(like_pattern),
-            Skill.description.ilike(like_pattern),
-            Skill.tags.cast(str).ilike(like_pattern),
+            Tool.name.ilike(like_pattern),
+            Tool.description.ilike(like_pattern),
+            Tool.tags.cast(str).ilike(like_pattern),
         ])
 
-    stmt = select(Skill).where(
-        Skill.status == "active",
+    stmt = select(Tool).where(
+        Tool.status == "active",
         or_(*conditions),
     )
 
-    # 按 skill_type 过滤
-    if skill_types:
-        stmt = stmt.where(Skill.skill_type.in_(skill_types))
+    # 按 tool_type 过滤
+    if tool_types:
+        stmt = stmt.where(Tool.tool_type.in_(tool_types))
 
     # 按 category 过滤（需要先查 category_id）
     if category_slugs:
@@ -309,23 +309,23 @@ async def _search_by_keywords(
         cat_result = await db.execute(cat_stmt)
         cat_ids = cat_result.scalars().all()
         if cat_ids:
-            stmt = stmt.where(Skill.category_id.in_(cat_ids))
+            stmt = stmt.where(Tool.category_id.in_(cat_ids))
 
     # 计算总数
     count_stmt = select(func.count()).select_from(stmt.subquery())
     total = (await db.execute(count_stmt)).scalar() or 0
 
     # 排序（优先按质量评分）
-    stmt = stmt.order_by(Skill.quality_score.desc())
+    stmt = stmt.order_by(Tool.quality_score.desc())
 
     # 分页
     offset = (page - 1) * size
     stmt = stmt.offset(offset).limit(size)
 
     result = await db.execute(stmt)
-    skills = result.scalars().all()
+    tools = result.scalars().all()
 
-    items = [SkillList.model_validate(s) for s in skills]
+    items = [ToolList.model_validate(s) for s in tools]
     pagination = PaginationOut.create(page=page, size=size, total=total)
 
     return items, pagination

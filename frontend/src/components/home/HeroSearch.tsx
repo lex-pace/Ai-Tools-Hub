@@ -144,7 +144,7 @@ export default function HeroSearch() {
       {/* Live stats */}
       <div className="flex justify-center gap-12 mt-10 py-6">
         {[
-          { target: 527, label: "Skills" },
+          { target: 527, label: "Tools" },
           { target: 48, label: "Categories" },
           { target: 12, label: "Ecosystems" },
           { target: 8923, label: "Users" },

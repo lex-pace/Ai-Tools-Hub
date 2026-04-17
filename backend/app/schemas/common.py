@@ -1,4 +1,4 @@
-"""AI Skills Hub — 通用 Schema 定义"""
+"""AI Tools Hub — 通用 Schema 定义"""
 from typing import Any, Generic, TypeVar, Optional
 from pydantic import BaseModel, Field
 

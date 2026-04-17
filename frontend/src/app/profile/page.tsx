@@ -8,17 +8,17 @@ import {
   Shield, Loader2, ArrowLeft, Sparkles, Clock,
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
-import SkillCard from "@/components/home/SkillCard";
+import ToolCard from "@/components/home/ToolCard";
 import { favoriteApi } from "@/lib/api";
-import type { Skill } from "@/lib/types";
+import type { Tool } from "@/lib/types";
 
-function mapSkillFromApi(item: any): Skill {
+function mapToolFromApi(item: any): Tool {
   return {
     id: item.id,
     name: item.name,
     description: item.description || "",
     detail: item.detail || "",
-    type: item.skill_type || item.type || "tool",
+    type: item.tool_type || item.type || "tool",
     platform: item.platforms?.[0] || "general",
     category: item.category || { id: "", name: "", slug: "" },
     tags: item.tags || [],
@@ -36,7 +36,7 @@ function mapSkillFromApi(item: any): Skill {
 export default function ProfilePage() {
   const router = useRouter();
   const { user, isAuthenticated, loading: authLoading, checkAuth, logout } = useAuthStore();
-  const [favorites, setFavorites] = useState<Skill[]>([]);
+  const [favorites, setFavorites] = useState<Tool[]>([]);
   const [favLoading, setFavLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"info" | "favorites">("info");
 
@@ -48,7 +48,7 @@ export default function ProfilePage() {
       const res = await favoriteApi.getList(1, 6);
       const body = res.data;
       const items = Array.isArray(body?.data) ? body.data : [];
-      setFavorites(items.map(mapSkillFromApi));
+      setFavorites(items.map(mapToolFromApi));
     } catch (err) {
       console.error("Failed to load favorites:", err);
     } finally {
@@ -198,8 +198,8 @@ export default function ProfilePage() {
                 <Link href="/favorites" className="text-xs font-medium" style={{ color: "var(--cyan)" }}>查看全部 →</Link>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {favorites.map((skill) => (
-                  <SkillCard key={skill.id} skill={skill} />
+                {favorites.map((tool) => (
+                  <ToolCard key={tool.id} tool={tool} />
                 ))}
               </div>
             </>

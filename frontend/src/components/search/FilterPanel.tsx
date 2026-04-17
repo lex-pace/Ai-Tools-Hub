@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { SKILL_TYPE_MAP, PLATFORM_MAP, SKILL_TYPE_COLORS, type SkillType, type SkillPlatform, type Category } from "@/lib/types";
+import { TOOL_TYPE_MAP, PLATFORM_MAP, TOOL_TYPE_COLORS, type ToolType, type ToolPlatform, type Category } from "@/lib/types";
 import { getCategories } from "@/lib/api";
 import type { SearchFilters } from "@/lib/types";
 
@@ -19,11 +19,11 @@ const SORT_OPTIONS: { value: SearchFilters["sortBy"]; label: string }[] = [
   { value: "popular", label: "使用量" },
 ];
 
-// 筛选用的技能类型列表（AI Tools Hub）
-const FILTER_SKILL_TYPES: { value: string; label: string }[] = [
+// 筛选用的工具类型列表（AI Tools Hub）
+const FILTER_TOOL_TYPES: { value: string; label: string }[] = [
   { value: "mcp_server", label: "MCP Server" },
   { value: "custom_gpt", label: "Custom GPT" },
-  { value: "agent_skill", label: "Agent 框架" },
+  { value: "agent_tool", label: "Agent 框架" },
   { value: "prompt_template", label: "Prompt 模板" },
   { value: "tool", label: "工具" },
 ];
@@ -47,11 +47,11 @@ export default function FilterPanel({
     fetchCategories();
   }, []);
 
-  const platforms = Object.entries(PLATFORM_MAP) as [SkillPlatform, typeof PLATFORM_MAP[SkillPlatform]][];
+  const platforms = Object.entries(PLATFORM_MAP) as [ToolPlatform, typeof PLATFORM_MAP[ToolPlatform]][];
 
   const displayedTypes = showAllTypes
-    ? FILTER_SKILL_TYPES
-    : FILTER_SKILL_TYPES.slice(0, 4);
+    ? FILTER_TOOL_TYPES
+    : FILTER_TOOL_TYPES.slice(0, 4);
 
   const hasActiveFilters =
     filters.type ||
@@ -89,7 +89,7 @@ export default function FilterPanel({
                       }
                     >
                       {cat.name}
-                      {cat.skillCount > 0 && <span className="ml-1 opacity-60">({cat.skillCount})</span>}
+                      {cat.toolCount > 0 && <span className="ml-1 opacity-60">({cat.toolCount})</span>}
                     </Badge>
                     {hasChildren && (
                       <div className="flex flex-wrap gap-1.5 mt-1 ml-2 pl-2 border-l" style={{ borderColor: "var(--glass-border)" }}>
@@ -105,7 +105,7 @@ export default function FilterPanel({
                             }
                           >
                             {child.name}
-                            {child.skillCount > 0 && <span className="ml-1 opacity-60">({child.skillCount})</span>}
+                            {child.toolCount > 0 && <span className="ml-1 opacity-60">({child.toolCount})</span>}
                           </Badge>
                         ))}
                       </div>
@@ -134,9 +134,9 @@ export default function FilterPanel({
         </div>
       </div>
 
-      {/* 技能类型 */}
+      {/* 工具类型 */}
       <div>
-        <h4 className="mb-2 text-sm font-medium">技能类型</h4>
+        <h4 className="mb-2 text-sm font-medium">工具类型</h4>
         <div className="flex flex-wrap gap-2">
           {displayedTypes.map(({ value, label }) => (
             <Badge
@@ -144,19 +144,19 @@ export default function FilterPanel({
               variant={filters.type === value ? "default" : "outline"}
               className="cursor-pointer"
               onClick={() =>
-                onFilterChange({ type: filters.type === value ? undefined : value as SkillType })
+                onFilterChange({ type: filters.type === value ? undefined : value as ToolType })
               }
             >
               {label}
             </Badge>
           ))}
         </div>
-        {FILTER_SKILL_TYPES.length > 4 && (
+        {FILTER_TOOL_TYPES.length > 4 && (
           <button
             className="mt-2 text-xs text-primary hover:underline"
             onClick={() => setShowAllTypes(!showAllTypes)}
           >
-            {showAllTypes ? "收起" : `展开更多 (${FILTER_SKILL_TYPES.length - 4})`}
+            {showAllTypes ? "收起" : `展开更多 (${FILTER_TOOL_TYPES.length - 4})`}
           </button>
         )}
       </div>

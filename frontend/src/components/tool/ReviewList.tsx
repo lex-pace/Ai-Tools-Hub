@@ -8,7 +8,7 @@ import { reviewApi } from "@/lib/api";
 import type { Review } from "@/lib/types";
 
 interface ReviewListProps {
-  skillId: string;
+  toolId: string;
 }
 
 /** 渲染星星评分 */
@@ -51,7 +51,7 @@ function formatRelativeTime(dateStr: string): string {
   return date.toLocaleDateString("zh-CN");
 }
 
-export default function ReviewList({ skillId }: ReviewListProps) {
+export default function ReviewList({ toolId }: ReviewListProps) {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -66,7 +66,7 @@ export default function ReviewList({ skillId }: ReviewListProps) {
       setLoadingMore(true);
     }
     try {
-      const res = await reviewApi.getList(skillId, pageNum, pageSize);
+      const res = await reviewApi.getList(toolId, pageNum, pageSize);
       const data = res.data?.data;
       const items: Review[] = Array.isArray(data) ? data : data?.items || [];
       setReviews((prev) => (append ? [...prev, ...items] : items));
@@ -79,13 +79,13 @@ export default function ReviewList({ skillId }: ReviewListProps) {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [skillId, pageSize]);
+  }, [toolId, pageSize]);
 
   useEffect(() => {
     setReviews([]);
     setPage(1);
     fetchReviews(1);
-  }, [skillId, fetchReviews]);
+  }, [toolId, fetchReviews]);
 
   const handleLoadMore = () => {
     const nextPage = page + 1;

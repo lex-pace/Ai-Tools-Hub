@@ -1,4 +1,4 @@
-"""AI Skills Hub — 用户 Schema"""
+"""AI Tools Hub — 用户 Schema"""
 import uuid
 from datetime import datetime
 from typing import Optional, Any

@@ -1,4 +1,4 @@
-"""AI Skills Hub — 智能搜索端点"""
+"""AI Tools Hub — 智能搜索端点"""
 import uuid
 from typing import Optional
 
@@ -8,20 +8,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db
 from app.core.auth import get_optional_user
-from app.models.skill import Skill
+from app.models.tool import Tool
 from app.models.user import User
-from app.schemas.skill import SkillList
+from app.schemas.tool import ToolList
 from app.schemas.common import ResponseWithPagination
 from app.services import search_service
 
 router = APIRouter()
 
 
-@router.get("", response_model=ResponseWithPagination[SkillList], summary="关键词搜索")
-async def search_skills(
+@router.get("", response_model=ResponseWithPagination[ToolList], summary="关键词搜索")
+async def search_tools(
     q: str = Query(..., min_length=1, max_length=200, description="搜索关键词"),
     category_id: Optional[uuid.UUID] = Query(default=None, description="分类 ID 过滤"),
-    skill_type: Optional[str] = Query(default=None, description="技能类型过滤"),
+    tool_type: Optional[str] = Query(default=None, description="工具类型过滤"),
     sort: Optional[str] = Query(default=None, description="排序方式"),
     page: int = Query(default=1, ge=1, description="页码"),
     size: int = Query(default=20, ge=1, le=100, description="每页数量"),
@@ -29,16 +29,16 @@ async def search_skills(
     db: AsyncSession = Depends(get_db),
 ):
     """
-    关键词搜索技能
+    关键词搜索工具
 
     优先使用 Elasticsearch 全文检索（IK 中文分词），ES 不可用时自动降级到 PostgreSQL LIKE 模糊匹配。
-    搜索范围：技能名称、描述、详情、标签
+    搜索范围：工具名称、描述、详情、标签
     """
-    items, pagination = await search_service.search_skills(
+    items, pagination = await search_service.search_tools(
         db,
         keyword=q,
         category_id=category_id,
-        skill_type=skill_type,
+        tool_type=tool_type,
         sort=sort,
         page=page,
         size=size,
@@ -63,29 +63,29 @@ async def search_skills(
 @router.post("/sync", summary="同步数据到 Elasticsearch")
 async def sync_to_elasticsearch(db: AsyncSession = Depends(get_db)):
     """
-    将所有活跃技能同步到 ES 索引（管理接口）
+    将所有活跃工具同步到 ES 索引（管理接口）
 
-    会先确保索引存在，再批量索引所有 status='active' 的技能。
+    会先确保索引存在，再批量索引所有 status='active' 的工具。
     """
-    from app.services.es_service import ensure_skills_index, bulk_index_skills
+    from app.services.es_service import ensure_tools_index, bulk_index_tools
 
     # 确保索引存在
-    index_ok = await ensure_skills_index()
+    index_ok = await ensure_tools_index()
     if not index_ok:
         return {"message": "ES 索引创建失败，请检查 ES 服务状态", "success": False}
 
-    # 查询所有活跃技能
-    stmt = select(Skill).where(Skill.status == "active")
+    # 查询所有活跃工具
+    stmt = select(Tool).where(Tool.status == "active")
     result = await db.execute(stmt)
-    skills = result.scalars().all()
+    tools = result.scalars().all()
 
     # 批量索引到 ES
-    count = await bulk_index_skills(skills)
+    count = await bulk_index_tools(tools)
 
     return {
-        "message": f"已同步 {count} 条技能到 ES",
+        "message": f"已同步 {count} 条工具到 ES",
         "success": True,
-        "total_active": len(skills),
+        "total_active": len(tools),
         "indexed": count,
     }
 
@@ -95,13 +95,13 @@ async def search_suggest(
     q: str = Query(default="", min_length=1, description="搜索前缀"),
     size: int = Query(default=10, ge=1, le=20, description="返回数量"),
 ):
-    """搜索建议 — 输入时实时返回匹配的 Skill 名称
+    """搜索建议 — 输入时实时返回匹配的 Tool 名称
 
     基于 ES Completion Suggester，输入 1 个字符即可返回建议。
     """
-    from app.services.es_service import suggest_skills
+    from app.services.es_service import suggest_tools
 
-    suggestions = await suggest_skills(q, size)
+    suggestions = await suggest_tools(q, size)
     return {"success": True, "data": suggestions}
 
 

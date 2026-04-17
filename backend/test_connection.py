@@ -11,7 +11,7 @@ from app.core.config import settings
 
 async def test_all():
     print("=" * 50)
-    print("  AI Skills Hub — 连接测试")
+    print("  AI Tools Hub — 连接测试")
     print("=" * 50)
     print(f"  模式: {settings.APP_MODE}")
     print(f"  DB:   {settings.DATABASE_URL}")

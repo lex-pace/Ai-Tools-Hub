@@ -2,16 +2,16 @@
 
 import HeroSearch from "@/components/home/HeroSearch";
 import CategoryGrid from "@/components/home/CategoryGrid";
-import SkillCard from "@/components/home/SkillCard";
-import { getCategories, getFeaturedSkills, getSkills } from "@/lib/api";
-import type { Skill, Category } from "@/lib/types";
+import ToolCard from "@/components/home/ToolCard";
+import { getCategories, getFeaturedTools, getTools } from "@/lib/api";
+import type { Tool, Category } from "@/lib/types";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, AlertCircle } from "lucide-react";
 
 export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [recommendedSkills, setRecommendedSkills] = useState<Skill[]>([]);
+  const [recommendedTools, setRecommendedTools] = useState<Tool[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -19,20 +19,20 @@ export default function HomePage() {
     async function fetchData() {
       setLoading(true); setError(null);
       try {
-        const [catData, skillResult] = await Promise.all([
+        const [catData, toolResult] = await Promise.all([
           getCategories().catch(() => [] as Category[]),
-          getFeaturedSkills(1, 6).catch(() => null),
+          getFeaturedTools(1, 6).catch(() => null),
         ]);
         setCategories(catData);
-        if (skillResult && skillResult.items) {
-          setRecommendedSkills(skillResult.items);
+        if (toolResult && toolResult.items) {
+          setRecommendedTools(toolResult.items);
         } else {
-          // fallback: try getSkills
+          // fallback: try getTools
           try {
-            const fallback = await getSkills({ page: 1, pageSize: 6, sortBy: "popular" });
-            setRecommendedSkills(fallback?.items || []);
+            const fallback = await getTools({ page: 1, pageSize: 6, sortBy: "popular" });
+            setRecommendedTools(fallback?.items || []);
           } catch {
-            setRecommendedSkills([]);
+            setRecommendedTools([]);
           }
         }
       } catch (err) { setError("数据加载失败，请刷新页面重试"); }
@@ -46,12 +46,12 @@ export default function HomePage() {
       <HeroSearch />
       <CategoryGrid categories={categories.length > 0 ? categories : undefined} />
 
-      {/* Trending Skills */}
+      {/* Trending Tools */}
       <section className="max-w-[1200px] mx-auto px-8 py-12">
         <div className="flex items-center justify-between mb-7">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm" style={{ background: "rgba(139,92,246,0.1)", color: "var(--violet)" }}>🔥</div>
-            <h2 className="text-xl font-extrabold tracking-tight">热门技能</h2>
+            <h2 className="text-xl font-extrabold tracking-tight">热门工具</h2>
           </div>
           <Link href="/search?sortBy=popular" className="text-sm transition-all hover:gap-2 flex items-center gap-1" style={{ color: "var(--text-lo)" }}>查看全部 →</Link>
         </div>
@@ -75,13 +75,13 @@ export default function HomePage() {
               </div>
             ))}
           </div>
-        ) : recommendedSkills.length > 0 ? (
+        ) : recommendedTools.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {recommendedSkills.map((skill) => <SkillCard key={skill.id} skill={skill} />)}
+            {recommendedTools.map((tool) => <ToolCard key={tool.id} tool={tool} />)}
           </div>
         ) : (
           <div className="rounded-2xl p-12 text-center" style={{ border: "1px dashed var(--glass-border)" }}>
-            <p style={{ color: "var(--text-lo)" }}>暂无推荐技能，请稍后再来查看</p>
+            <p style={{ color: "var(--text-lo)" }}>暂无推荐工具，请稍后再来查看</p>
           </div>
         )}
       </section>

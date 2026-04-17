@@ -9,9 +9,9 @@ import {
   Sparkles, Wand2, AlertCircle, ChevronLeft,
   ChevronRight, Layers, Zap, Database, type LucideIcon,
 } from "lucide-react";
-import { getCategories, getSkillsByCategory } from "@/lib/api";
-import SkillCard from "@/components/home/SkillCard";
-import type { Category, Skill } from "@/lib/types";
+import { getCategories, getToolsByCategory } from "@/lib/api";
+import ToolCard from "@/components/home/ToolCard";
+import type { Category, Tool } from "@/lib/types";
 
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
   "mcp-tools": Plug, "mcp-server": Plug, "mcp-client": Plug, "mcp-toolkit": Plug,
@@ -42,13 +42,13 @@ function CategoriesContent() {
   const selectedCat = searchParams.get("cat");
 
   const [categories, setCategories] = useState<Category[]>([]);
-  const [skills, setSkills] = useState<Skill[]>([]);
+  const [tools, setTools] = useState<Tool[]>([]);
   const [loading, setLoading] = useState(true);
-  const [skillsLoading, setSkillsLoading] = useState(false);
+  const [toolsLoading, setToolsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [skillPage, setSkillPage] = useState(1);
-  const [skillTotalPages, setSkillTotalPages] = useState(0);
-  const [skillTotal, setSkillTotal] = useState(0);
+  const [toolPage, setToolPage] = useState(1);
+  const [toolTotalPages, setToolTotalPages] = useState(0);
+  const [toolTotal, setToolTotal] = useState(0);
 
   // 一级分类
   const topLevelCategories = categories.filter((c) => !c.parentId);
@@ -74,31 +74,31 @@ function CategoriesContent() {
     fetchCategories();
   }, []);
 
-  const fetchSkillsByCategory = useCallback(async (categoryId: string, page: number) => {
-    setSkillsLoading(true);
+  const fetchToolsByCategory = useCallback(async (categoryId: string, page: number) => {
+    setToolsLoading(true);
     try {
-      const result = await getSkillsByCategory(categoryId, page, 12);
-      setSkills(result.items);
-      setSkillTotalPages(result.totalPages);
-      setSkillTotal(result.total);
+      const result = await getToolsByCategory(categoryId, page, 12);
+      setTools(result.items);
+      setToolTotalPages(result.totalPages);
+      setToolTotal(result.total);
     } catch (err) {
-      console.error("Failed to fetch skills:", err);
-      setSkills([]);
+      console.error("Failed to fetch tools:", err);
+      setTools([]);
     } finally {
-      setSkillsLoading(false);
+      setToolsLoading(false);
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     if (selectedCat) {
-      setSkillPage(1);
-      fetchSkillsByCategory(selectedCat, 1);
+      setToolPage(1);
+      fetchToolsByCategory(selectedCat, 1);
     } else {
-      setSkills([]);
+      setTools([]);
       setLoading(false);
     }
-  }, [selectedCat, fetchSkillsByCategory]);
+  }, [selectedCat, fetchToolsByCategory]);
 
   const handleCategoryClick = (catId: string) => {
     if (selectedCat === catId) {
@@ -110,13 +110,13 @@ function CategoriesContent() {
 
   const handlePageChange = (newPage: number) => {
     if (selectedCat) {
-      setSkillPage(newPage);
-      fetchSkillsByCategory(selectedCat, newPage);
+      setToolPage(newPage);
+      fetchToolsByCategory(selectedCat, newPage);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
-  const totalSkills = categories.reduce((sum, c) => sum + (c.skillCount || 0), 0);
+  const totalTools = categories.reduce((sum, c) => sum + (c.toolCount || 0), 0);
 
   return (
     <div className="max-w-[1200px] mx-auto px-4 sm:px-8 py-8">
@@ -124,7 +124,7 @@ function CategoriesContent() {
       <div className="mb-6">
         <h1 className="text-3xl font-black tracking-tight" style={{ background: "linear-gradient(135deg, var(--cyan), var(--violet))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>分类浏览</h1>
         <p className="mt-1.5 text-sm" style={{ color: "var(--text-mid)" }}>
-          {totalSkills > 0 ? `共 ${topLevelCategories.length} 个分类，${totalSkills} 个 AI 工具` : `共 ${topLevelCategories.length} 个分类`}
+          {totalTools > 0 ? `共 ${topLevelCategories.length} 个分类，${totalTools} 个 AI 工具` : `共 ${topLevelCategories.length} 个分类`}
         </p>
       </div>
 
@@ -149,8 +149,8 @@ function CategoriesContent() {
             >
               <Icon className="w-4 h-4" />
               <span>{cat.name}</span>
-              {cat.skillCount > 0 && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-md" style={{ background: "rgba(255,255,255,0.06)", color: "var(--text-lo)" }}>{cat.skillCount}</span>
+              {cat.toolCount > 0 && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-md" style={{ background: "rgba(255,255,255,0.06)", color: "var(--text-lo)" }}>{cat.toolCount}</span>
               )}
             </button>
           );
@@ -188,8 +188,8 @@ function CategoriesContent() {
               >
                 <ChildIcon className="w-3 h-3" />
                 <span>{child.name}</span>
-                {child.skillCount > 0 && (
-                  <span style={{ color: isChildActive ? "rgba(0,240,255,0.6)" : "var(--text-lo)" }}>({child.skillCount})</span>
+                {child.toolCount > 0 && (
+                  <span style={{ color: isChildActive ? "rgba(0,240,255,0.6)" : "var(--text-lo)" }}>({child.toolCount})</span>
                 )}
               </button>
             );
@@ -200,7 +200,7 @@ function CategoriesContent() {
       {/* 分隔线 */}
       <div className="h-[1px] mb-6" style={{ background: "linear-gradient(90deg, transparent, var(--glass-border), transparent)" }} />
 
-      {/* 技能结果区域 */}
+      {/* 工具结果区域 */}
       {error ? (
         <div className="flex flex-col items-center justify-center rounded-2xl py-16" style={{ border: "1px dashed var(--glass-border)" }}>
           <AlertCircle className="mb-3 w-8 h-8" style={{ color: "var(--text-lo)" }} />
@@ -218,14 +218,14 @@ function CategoriesContent() {
                 <p className="text-xs mt-0.5" style={{ color: "var(--text-lo)" }}>{selectedCategory.description}</p>
               )}
             </div>
-            {skillTotal > 0 && (
+            {toolTotal > 0 && (
               <span className="ml-auto text-xs px-2.5 py-1 rounded-full" style={{ background: "rgba(0,240,255,0.08)", color: "var(--cyan)", border: "1px solid rgba(0,240,255,0.12)" }}>
-                共 {skillTotal} 个
+                共 {toolTotal} 个
               </span>
             )}
           </div>
 
-          {skillsLoading && skills.length === 0 ? (
+          {toolsLoading && tools.length === 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="rounded-2xl p-6 animate-pulse" style={{ background: "var(--glass)", border: "1px solid var(--glass-border)" }}>
@@ -237,18 +237,18 @@ function CategoriesContent() {
                 </div>
               ))}
             </div>
-          ) : skills.length > 0 ? (
+          ) : tools.length > 0 ? (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {skills.map((skill) => (
-                  <SkillCard key={skill.id} skill={skill} />
+                {tools.map((tool) => (
+                  <ToolCard key={tool.id} tool={tool} />
                 ))}
               </div>
-              {skillTotalPages > 1 && (
+              {toolTotalPages > 1 && (
                 <div className="mt-8 flex items-center justify-center gap-2">
-                  <button disabled={skillPage <= 1 || skillsLoading} onClick={() => handlePageChange(skillPage - 1)} className="w-9 h-9 rounded-[10px] flex items-center justify-center text-sm font-semibold cursor-pointer transition-all hover:-translate-y-0.5 disabled:opacity-30" style={{ border: "1px solid var(--glass-border)", background: "var(--glass)", color: "var(--text-mid)" }}><ChevronLeft className="w-4 h-4" /></button>
-                  <span className="text-sm px-3" style={{ color: "var(--text-lo)" }}>{skillPage} / {skillTotalPages}</span>
-                  <button disabled={skillPage >= skillTotalPages || skillsLoading} onClick={() => handlePageChange(skillPage + 1)} className="w-9 h-9 rounded-[10px] flex items-center justify-center text-sm font-semibold cursor-pointer transition-all hover:-translate-y-0.5 disabled:opacity-30" style={{ border: "1px solid var(--glass-border)", background: "var(--glass)", color: "var(--text-mid)" }}><ChevronRight className="w-4 h-4" /></button>
+                  <button disabled={toolPage <= 1 || toolsLoading} onClick={() => handlePageChange(toolPage - 1)} className="w-9 h-9 rounded-[10px] flex items-center justify-center text-sm font-semibold cursor-pointer transition-all hover:-translate-y-0.5 disabled:opacity-30" style={{ border: "1px solid var(--glass-border)", background: "var(--glass)", color: "var(--text-mid)" }}><ChevronLeft className="w-4 h-4" /></button>
+                  <span className="text-sm px-3" style={{ color: "var(--text-lo)" }}>{toolPage} / {toolTotalPages}</span>
+                  <button disabled={toolPage >= toolTotalPages || toolsLoading} onClick={() => handlePageChange(toolPage + 1)} className="w-9 h-9 rounded-[10px] flex items-center justify-center text-sm font-semibold cursor-pointer transition-all hover:-translate-y-0.5 disabled:opacity-30" style={{ border: "1px solid var(--glass-border)", background: "var(--glass)", color: "var(--text-mid)" }}><ChevronRight className="w-4 h-4" /></button>
                 </div>
               )}
             </>

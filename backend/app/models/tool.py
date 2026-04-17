@@ -1,4 +1,4 @@
-"""AI Skills Hub — 技能模型（对应 skills 表）"""
+"""AI Tools Hub — 工具模型（对应 tools 表）"""
 import uuid
 from datetime import datetime
 from decimal import Decimal
@@ -14,10 +14,10 @@ from sqlalchemy.sql import text
 from app.core.database import Base
 
 
-class Skill(Base):
-    """Skills 主表 — 存储 AI 技能/工具信息"""
+class Tool(Base):
+    """Tools 主表 — 存储 AI 工具/工具信息"""
 
-    __tablename__ = "skills"
+    __tablename__ = "tools"
 
     # ── 主键 ──────────────────────────────────────────
     id: Mapped[uuid.UUID] = mapped_column(
@@ -27,7 +27,7 @@ class Skill(Base):
     )
 
     # ── 基本信息 ──────────────────────────────────────
-    name: Mapped[str] = mapped_column(String(200), nullable=False, comment="技能名称")
+    name: Mapped[str] = mapped_column(String(200), nullable=False, comment="工具名称")
     slug: Mapped[str] = mapped_column(
         String(200), unique=True, nullable=False, comment="URL 友好标识"
     )
@@ -35,8 +35,8 @@ class Skill(Base):
     detail: Mapped[Optional[str]] = mapped_column(Text, nullable=True, comment="详细介绍")
 
     # ── 分类与类型 ────────────────────────────────────
-    skill_type: Mapped[str] = mapped_column(
-        String(50), nullable=False, default="mcp_server", comment="技能类型"
+    tool_type: Mapped[str] = mapped_column(
+        String(50), nullable=False, default="mcp_server", comment="工具类型"
     )
     category_id: Mapped[Optional[uuid.UUID]] = mapped_column(
         UUID(as_uuid=True),
@@ -114,30 +114,30 @@ class Skill(Base):
 
     # ── 关系 ──────────────────────────────────────────
     category: Mapped[Optional["Category"]] = relationship(
-        "Category", back_populates="skills", lazy="selectin"
+        "Category", back_populates="tools", lazy="selectin"
     )
     favorites: Mapped[List["Favorite"]] = relationship(
-        "Favorite", back_populates="skill", lazy="noload"
+        "Favorite", back_populates="tool", lazy="noload"
     )
     reviews: Mapped[List["Review"]] = relationship(
-        "Review", back_populates="skill", lazy="noload"
+        "Review", back_populates="tool", lazy="noload"
     )
 
     # ── 索引 ──────────────────────────────────────────
     __table_args__ = (
-        Index("idx_skills_type", "skill_type"),
-        Index("idx_skills_platforms", "platforms", postgresql_using="gin"),
-        Index("idx_skills_category", "category_id"),
-        Index("idx_skills_tags", "tags", postgresql_using="gin"),
-        Index("idx_skills_quality", "quality_score"),
-        Index("idx_skills_usage", "usage_count"),
-        Index("idx_skills_status", "status"),
-        Index("idx_skills_created", "created_at"),
-        Index("idx_skills_source", "source", "source_id"),
+        Index("idx_tools_type", "tool_type"),
+        Index("idx_tools_platforms", "platforms", postgresql_using="gin"),
+        Index("idx_tools_category", "category_id"),
+        Index("idx_tools_tags", "tags", postgresql_using="gin"),
+        Index("idx_tools_quality", "quality_score"),
+        Index("idx_tools_usage", "usage_count"),
+        Index("idx_tools_status", "status"),
+        Index("idx_tools_created", "created_at"),
+        Index("idx_tools_source", "source", "source_id"),
     )
 
     def __repr__(self) -> str:
-        return f"<Skill {self.name} ({self.skill_type})>"
+        return f"<Tool {self.name} ({self.tool_type})>"
 
 
 # 避免循环导入
