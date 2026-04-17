@@ -1,0 +1,227 @@
+# ============================================================
+# AI Skills Hub — Docker Compose 开发环境
+# 用法: docker compose up -d
+#
+# 端口规划（避免与宿主机已有服务冲突）:
+#   PostgreSQL:       15432 (宿主机) → 5432 (容器内)
+#   Elasticsearch:    19200 (宿主机) → 9200 (容器内)
+#   Redis:            16379 (宿主机) → 6379 (容器内)
+#   后端 API:         8000  (宿主机) → 8000 (容器内)
+#   前端:             3000  (宿主机) → 3000 (容器内)
+#   Nginx:            3080  (宿主机) → 80   (容器内)
+#
+# 容器间通信不受影响，仍使用容器名 + 内部端口
+# ============================================================
+
+services:
+
+  # ==================== PostgreSQL ====================
+  postgres:
+    image: postgres:16-alpine
+    container_name: skills-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: skills
+      POSTGRES_PASSWORD: skills123
+      POSTGRES_DB: skills_hub
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    ports:
+      - "15432:5432"
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+    command: >
+      postgres
+      -c shared_buffers=192MB
+      -c max_connections=50
+      -c effective_cache_size=256MB
+      -c work_mem=4MB
+      -c maintenance_work_mem=64MB
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skills -d skills_hub"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - skills-net
+
+  # ==================== Elasticsearch (含 IK 中文分词) ====================
+  elasticsearch:
+    build:
+      context: ./elasticsearch
+      dockerfile: Dockerfile
+    container_name: skills-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - xpack.ml.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - cluster.name=skills-hub
+      - bootstrap.memory_lock=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - ./data/elasticsearch:/usr/share/elasticsearch/data
+    ports:
+      - "19200:9200"
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - skills-net
+
+  # ==================== Redis ====================
+  redis:
+    image: redis:7-alpine
+    container_name: skills-redis
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --save 60 1000 --appendonly yes
+    volumes:
+      - ./data/redis:/data
+    ports:
+      - "16379:6379"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - skills-net
+
+  # ==================== 后端 API (FastAPI) ====================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: skills-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - APP_MODE=docker
+      - DATABASE_URL=postgresql+asyncpg://skills:skills123@postgres:5432/skills_hub
+      - SYNC_DATABASE_URL=postgresql://skills:skills123@postgres:5432/skills_hub
+      - REDIS_URL=redis://redis:6379/0
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - CHROMA_PERSIST_DIR=/app/data/chroma
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./backend/app:/app/app
+      - ./backend/scripts:/app/scripts
+      - ./backend/alembic:/app/alembic
+      - ./backend/alembic.ini:/app/alembic.ini
+      - ./data/chroma:/app/data/chroma
+      - ./data/uploads:/app/uploads
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    command: >
+      sh -c "
+        echo '=== 等待数据库就绪 ===' &&
+        python -c 'import asyncio; from app.core.database import engine; asyncio.run(engine.dispose())' 2>/dev/null || true &&
+        echo '=== 执行数据库迁移 ===' &&
+        alembic upgrade head 2>/dev/null || echo '迁移跳过(无迁移文件)' &&
+        echo '=== 同步数据到 ES ===' &&
+        python -c '
+        import asyncio
+        from app.core.database import async_session_factory
+        from app.services.es_service import ensure_skills_index, bulk_index_skills
+        from app.models.skill import Skill
+        from sqlalchemy import select
+        async def sync():
+            await ensure_skills_index()
+            async with async_session_factory() as db:
+                result = await db.execute(select(Skill).where(Skill.status == \"active\"))
+                skills = result.scalars().all()
+                if skills:
+                    count = await bulk_index_skills(skills)
+                    print(f\"ES 同步完成: {count} 条\")
+        asyncio.run(sync())
+        ' 2>/dev/null || echo 'ES 同步跳过' &&
+        echo '=== 启动 FastAPI ===' &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --log-level info
+      "
+    networks:
+      - skills-net
+
+  # ==================== 前端 (Next.js) ====================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: skills-frontend
+    restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+      - NODE_OPTIONS=--max-old-space-size=512
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/package.json:/app/package.json
+      - ./frontend/next.config.js:/app/next.config.js
+      - ./frontend/tailwind.config.js:/app/tailwind.config.js
+      - ./frontend/tsconfig.json:/app/tsconfig.json
+      - ./frontend/postcss.config.js:/app/postcss.config.js
+      - ./frontend/components.json:/app/components.json
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    networks:
+      - skills-net
+
+  # ==================== Nginx 反向代理 ====================
+  nginx:
+    image: nginx:alpine
+    container_name: skills-nginx
+    restart: unless-stopped
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./data/uploads:/usr/share/nginx/uploads:ro
+    ports:
+      - "3080:80"
+    depends_on:
+      - frontend
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+    networks:
+      - skills-net
+
+networks:
+  skills-net:
+    driver: bridge

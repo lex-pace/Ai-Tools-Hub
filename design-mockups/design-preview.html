@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Skills Hub — Neural Interface</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg-void:#020208;--bg-nebula:#06060f;
+    --cyan:#00f0ff;--violet:#8b5cf6;--magenta:#ec4899;--amber:#f59e0b;--emerald:#10b981;
+    --cyan-dim:rgba(0,240,255,0.15);--violet-dim:rgba(139,92,246,0.15);
+    --text-hi:#f8fafc;--text-mid:#94a3b8;--text-lo:#475569;
+    --glass:rgba(8,8,20,0.65);--glass-border:rgba(0,240,255,0.08);
+    --holo-1:rgba(0,240,255,0.4);--holo-2:rgba(139,92,246,0.4);--holo-3:rgba(236,72,153,0.3);
+    --card-shadow:rgba(0,0,0,0.4);--code-bg:rgba(2,2,8,0.8);
+    --nebula-opacity:1;--neural-opacity:1;--selection-bg:rgba(0,240,255,0.3);--selection-color:#fff;
+    --scrollbar-track:#020208;
+  }
+  /* ═══ LIGHT THEME ═══ */
+  [data-theme="light"]{
+    --bg-void:#f0f4f8;--bg-nebula:#e8ecf2;
+    --cyan:#0891b2;--violet:#7c3aed;--magenta:#db2777;--amber:#d97706;--emerald:#059669;
+    --cyan-dim:rgba(8,145,178,0.1);--violet-dim:rgba(124,58,237,0.1);
+    --text-hi:#0f172a;--text-mid:#475569;--text-lo:#94a3b8;
+    --glass:rgba(255,255,255,0.75);--glass-border:rgba(8,145,178,0.1);
+    --holo-1:rgba(8,145,178,0.25);--holo-2:rgba(124,58,237,0.25);--holo-3:rgba(219,39,119,0.2);
+    --card-shadow:rgba(0,0,0,0.08);--code-bg:rgba(15,23,42,0.95);
+    --nebula-opacity:0.3;--neural-opacity:0.4;--selection-bg:rgba(8,145,178,0.2);--selection-color:#0f172a;
+    --scrollbar-track:#f0f4f8;
+  }
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,sans-serif;background:var(--bg-void);color:var(--text-hi);overflow-x:hidden;line-height:1.6;transition:background 0.5s,color 0.5s}
+  ::selection{background:var(--selection-bg);color:var(--selection-color)}
+  ::-webkit-scrollbar{width:6px}
+  ::-webkit-scrollbar-track{background:var(--scrollbar-track)}
+  ::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--cyan),var(--violet));border-radius:3px}
+
+  /* ═══════════════════════════════════════════════════════════
+     NEURAL NETWORK BACKGROUND — The Core Visual Identity
+     ═══════════════════════════════════════════════════════════ */
+  #neural-bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+
+  /* Nebula glow layers */
+  .nebula{position:fixed;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0;mix-blend-mode:screen;opacity:var(--nebula-opacity);transition:opacity 0.5s}
+  #neural-bg{opacity:var(--neural-opacity);transition:opacity 0.5s}
+  .nebula-1{width:800px;height:800px;background:radial-gradient(circle,rgba(0,240,255,0.04),transparent 70%);top:-20%;left:-10%;animation:nebulaDrift1 25s ease-in-out infinite}
+  .nebula-2{width:600px;height:600px;background:radial-gradient(circle,rgba(139,92,246,0.05),transparent 70%);bottom:-10%;right:-5%;animation:nebulaDrift2 30s ease-in-out infinite}
+  .nebula-3{width:500px;height:500px;background:radial-gradient(circle,rgba(236,72,153,0.03),transparent 70%);top:50%;left:40%;animation:nebulaDrift3 20s ease-in-out infinite}
+  @keyframes nebulaDrift1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(80px,40px) scale(1.1)}}
+  @keyframes nebulaDrift2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-60px,-30px) scale(1.15)}}
+  @keyframes nebulaDrift3{0%,100%{transform:translate(0,0) scale(0.9)}50%{transform:translate(40px,-50px) scale(1.05)}}
+
+  .content-wrap{position:relative;z-index:1}
+
+  /* ═══════════════════════════════════════════════════════════
+     NAVIGATION — Magnetic Energy Bar
+     ═══════════════════════════════════════════════════════════ */
+  .nav{position:sticky;top:0;z-index:100;height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;
+    background:rgba(2,2,8,0.7);backdrop-filter:blur(40px) saturate(1.8);
+    border-bottom:1px solid var(--glass-border)}
+  .nav::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,transparent 5%,var(--cyan) 30%,var(--violet) 50%,var(--magenta) 70%,transparent 95%);
+    opacity:0.4;animation:navPulse 4s ease-in-out infinite}
+  @keyframes navPulse{0%,100%{opacity:0.2}50%{opacity:0.6}}
+
+  .nav-logo{display:flex;align-items:center;gap:0.6rem;cursor:pointer}
+  .nav-logo-mark{width:32px;height:32px;position:relative}
+  .nav-logo-mark svg{width:100%;height:100%}
+  .nav-logo-text{font-size:1.05rem;font-weight:800;letter-spacing:-0.03em;
+    background:linear-gradient(135deg,var(--cyan),var(--violet));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+  .nav-links{display:flex;gap:0;position:relative}
+  .nav-link{position:relative;padding:0.5rem 1.1rem;color:var(--text-mid);text-decoration:none;font-size:0.82rem;font-weight:500;
+    cursor:pointer;transition:color 0.3s;z-index:1}
+  .nav-link:hover{color:var(--text-hi)}
+  .nav-link.active{color:var(--cyan)}
+  .nav-link::before{content:'';position:absolute;bottom:0;left:50%;width:0;height:2px;
+    background:var(--cyan);transition:all 0.4s cubic-bezier(0.23,1,0.32,1);transform:translateX(-50%);border-radius:1px;
+    box-shadow:0 0 8px rgba(0,240,255,0.5)}
+  .nav-link:hover::before,.nav-link.active::before{width:70%}
+
+  .nav-right{display:flex;align-items:center;gap:0.75rem}
+  .lang-switch{display:flex;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:8px;overflow:hidden}
+  .lang-opt{padding:4px 10px;font-size:0.72rem;font-weight:600;cursor:pointer;color:var(--text-lo);transition:all 0.3s;border:none;background:transparent}
+  .lang-opt.active{background:rgba(0,240,255,0.12);color:var(--cyan)}
+  .nav-status{display:flex;align-items:center;gap:0.4rem;font-size:0.7rem;color:var(--emerald)}
+  .status-dot{width:6px;height:6px;border-radius:50%;background:var(--emerald);animation:statusPulse 2s infinite}
+  @keyframes statusPulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,0.4)}50%{box-shadow:0 0 0 4px rgba(16,185,129,0)}}
+  .nav-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--violet));cursor:pointer;
+    border:2px solid transparent;transition:all 0.3s}
+  .nav-avatar:hover{border-color:var(--cyan);box-shadow:0 0 15px rgba(0,240,255,0.3)}
+  .theme-toggle{width:32px;height:32px;border-radius:8px;border:1px solid var(--glass-border);background:var(--glass);
+    cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.85rem;
+    transition:all 0.3s;position:relative;overflow:hidden;backdrop-filter:blur(10px)}
+  .theme-toggle:hover{border-color:rgba(0,240,255,0.2);transform:rotate(15deg) scale(1.05)}
+  .theme-toggle .icon-sun,.theme-toggle .icon-moon{position:absolute;transition:all 0.4s}
+  .theme-toggle .icon-sun{opacity:0;transform:rotate(-90deg) scale(0.5)}
+  .theme-toggle .icon-moon{opacity:1;transform:rotate(0) scale(1)}
+  [data-theme="light"] .theme-toggle .icon-sun{opacity:1;transform:rotate(0) scale(1)}
+  [data-theme="light"] .theme-toggle .icon-moon{opacity:0;transform:rotate(90deg) scale(0.5)}
+
+  /* ═══════════════════════════════════════════════════════════
+     HERO — The Neural Gateway
+     ═══════════════════════════════════════════════════════════ */
+  .hero{padding:5rem 2rem 3rem;text-align:center;position:relative}
+  .hero-aura{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;
+    background:radial-gradient(circle,rgba(0,240,255,0.06) 0%,rgba(139,92,246,0.03) 40%,transparent 70%);
+    animation:auraRotate 20s linear infinite;pointer-events:none}
+  @keyframes auraRotate{0%{transform:translate(-50%,-50%) rotate(0deg)}100%{transform:translate(-50%,-50%) rotate(360deg)}}
+
+  .hero-chip{display:inline-flex;align-items:center;gap:0.5rem;padding:5px 14px 5px 8px;border-radius:20px;font-size:0.72rem;
+    background:rgba(0,240,255,0.06);border:1px solid rgba(0,240,255,0.12);color:var(--cyan);margin-bottom:1.5rem;
+    animation:chipFloat 3s ease-in-out infinite}
+  @keyframes chipFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+  .hero-chip-icon{width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--violet));
+    display:flex;align-items:center;justify-content:center;font-size:0.6rem}
+
+  .hero-title{font-size:3.5rem;font-weight:900;letter-spacing:-0.04em;line-height:1.08;margin-bottom:1rem}
+  .hero-title .line1{color:var(--text-hi);display:block}
+  .hero-title .line2{display:block;background:linear-gradient(135deg,var(--cyan) 0%,var(--violet) 50%,var(--magenta) 100%);
+    background-size:200% 200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    animation:heroGradient 6s ease infinite}
+  @keyframes heroGradient{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+  .hero-sub{color:var(--text-mid);font-size:1rem;max-width:520px;margin:0 auto 2.5rem;line-height:1.7}
+
+  /* ═══ SEARCH — Neural Terminal ═══ */
+  .search-terminal{max-width:640px;margin:0 auto;position:relative}
+  .search-shell{position:relative;border-radius:16px;overflow:hidden;
+    background:rgba(6,6,15,0.8);border:1px solid rgba(0,240,255,0.1);
+    box-shadow:0 0 0 1px rgba(0,240,255,0.05),0 4px 40px rgba(0,0,0,0.5),0 0 80px rgba(0,240,255,0.04);
+    transition:all 0.5s cubic-bezier(0.23,1,0.32,1)}
+  .search-shell:focus-within{border-color:rgba(0,240,255,0.3);
+    box-shadow:0 0 0 1px rgba(0,240,255,0.15),0 4px 60px rgba(0,0,0,0.6),0 0 100px rgba(0,240,255,0.08)}
+  .search-shell::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,transparent,var(--cyan),var(--violet),transparent);opacity:0.5}
+  /* Holographic shimmer on search */
+  .search-shell::after{content:'';position:absolute;inset:0;border-radius:16px;
+    background:linear-gradient(135deg,transparent 30%,rgba(0,240,255,0.03) 45%,rgba(139,92,246,0.03) 55%,transparent 70%);
+    background-size:300% 300%;animation:holoShimmer 6s ease infinite;pointer-events:none}
+  @keyframes holoShimmer{0%{background-position:0% 0%}50%{background-position:100% 100%}100%{background-position:0% 0%}}
+
+  .search-bar{display:flex;align-items:center;position:relative;z-index:1}
+  .search-prefix{padding:0 0 0 1.25rem;color:var(--cyan);font-family:'SF Mono',Monaco,Consolas,monospace;font-size:0.85rem;opacity:0.6;user-select:none}
+  .search-input{flex:1;padding:1rem 1rem;background:transparent;border:none;color:var(--text-hi);font-size:0.95rem;outline:none}
+  .search-input::placeholder{color:var(--text-lo);font-style:italic}
+  .search-exec{padding:0.65rem 1.5rem;margin:0.5rem;background:linear-gradient(135deg,var(--cyan),var(--violet));
+    border:none;border-radius:10px;color:#fff;font-weight:700;font-size:0.82rem;cursor:pointer;
+    transition:all 0.3s;position:relative;overflow:hidden;letter-spacing:0.02em}
+  .search-exec:hover{transform:scale(1.03);box-shadow:0 0 25px rgba(0,240,255,0.3)}
+  .search-exec::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);
+    transform:translateX(-100%);transition:transform 0.5s}
+  .search-exec:hover::before{transform:translateX(100%)}
+
+  /* Floating thought bubbles around search */
+  .thoughts{position:relative;height:40px;margin-top:1.25rem}
+  .thought{position:absolute;padding:4px 12px;border-radius:12px;font-size:0.7rem;white-space:nowrap;
+    background:rgba(6,6,15,0.8);border:1px solid rgba(255,255,255,0.06);color:var(--text-mid);
+    animation:thoughtFloat 8s ease-in-out infinite;cursor:pointer;transition:all 0.3s;backdrop-filter:blur(10px)}
+  .thought:hover{border-color:rgba(0,240,255,0.2);color:var(--cyan);transform:scale(1.05)!important}
+  .thought:nth-child(1){left:5%;animation-delay:0s}
+  .thought:nth-child(2){left:25%;animation-delay:-1.5s}
+  .thought:nth-child(3){left:45%;animation-delay:-3s}
+  .thought:nth-child(4){left:65%;animation-delay:-4.5s}
+  .thought:nth-child(5){left:82%;animation-delay:-6s}
+  @keyframes thoughtFloat{0%,100%{transform:translateY(0) scale(1);opacity:0.6}25%{transform:translateY(-8px) scale(1.02);opacity:0.9}50%{transform:translateY(-3px) scale(0.98);opacity:0.7}75%{transform:translateY(-10px) scale(1.01);opacity:0.85}}
+
+  /* ═══ LIVE STATS — Data Pulse ═══ */
+  .live-stats{display:flex;justify-content:center;gap:3rem;margin-top:3rem;padding:1.5rem 0}
+  .live-stat{text-align:center;position:relative}
+  .live-stat-val{font-size:1.8rem;font-weight:900;font-variant-numeric:tabular-nums;
+    background:linear-gradient(135deg,var(--cyan),var(--violet));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .live-stat-label{font-size:0.7rem;color:var(--text-lo);text-transform:uppercase;letter-spacing:0.1em;margin-top:0.15rem}
+  .live-stat::after{content:'';position:absolute;right:-1.5rem;top:50%;transform:translateY(-50%);width:1px;height:30px;
+    background:linear-gradient(180deg,transparent,rgba(0,240,255,0.15),transparent)}
+  .live-stat:last-child::after{display:none}
+
+  /* ═══ SECTION ═══ */
+  .section{padding:3rem 2rem;max-width:1200px;margin:0 auto}
+  .sec-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.75rem}
+  .sec-title{font-size:1.35rem;font-weight:800;letter-spacing:-0.02em;display:flex;align-items:center;gap:0.6rem}
+  .sec-title-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.8rem}
+  .sec-title-icon.t1{background:rgba(0,240,255,0.1);color:var(--cyan)}
+  .sec-title-icon.t2{background:rgba(139,92,246,0.1);color:var(--violet)}
+  .sec-title-icon.t3{background:rgba(236,72,153,0.1);color:var(--magenta)}
+  .sec-title-icon.t4{background:rgba(245,158,11,0.1);color:var(--amber)}
+  .sec-more{font-size:0.78rem;color:var(--text-lo);cursor:pointer;transition:all 0.3s;display:flex;align-items:center;gap:0.3rem}
+  .sec-more:hover{color:var(--cyan);gap:0.5rem}
+
+  /* ═══ CATEGORY — Neural Nodes ═══ */
+  .cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem}
+  .cat-node{position:relative;padding:1rem;border-radius:14px;cursor:pointer;overflow:hidden;
+    background:var(--glass);border:1px solid var(--glass-border);backdrop-filter:blur(20px);
+    transition:all 0.4s cubic-bezier(0.23,1,0.32,1);display:flex;align-items:center;gap:0.75rem}
+  .cat-node::before{content:'';position:absolute;inset:0;border-radius:14px;
+    background:linear-gradient(135deg,rgba(0,240,255,0.08),rgba(139,92,246,0.05));opacity:0;transition:opacity 0.4s}
+  .cat-node::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,var(--cyan),var(--violet));transform:scaleX(0);transition:transform 0.4s;transform-origin:left}
+  .cat-node:hover{transform:translateY(-4px);border-color:rgba(0,240,255,0.15);
+    box-shadow:0 12px 40px rgba(0,0,0,0.3),0 0 30px rgba(0,240,255,0.05)}
+  .cat-node:hover::before{opacity:1}
+  .cat-node:hover::after{transform:scaleX(1)}
+  .cat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+    position:relative;z-index:1;flex-shrink:0;transition:transform 0.4s cubic-bezier(0.23,1,0.32,1)}
+  .cat-node:hover .cat-icon{transform:scale(1.1) rotate(-3deg)}
+  .ci-1{background:rgba(0,240,255,0.1)}.ci-2{background:rgba(139,92,246,0.1)}.ci-3{background:rgba(16,185,129,0.1)}
+  .ci-4{background:rgba(245,158,11,0.1)}.ci-5{background:rgba(236,72,153,0.1)}.ci-6{background:rgba(99,102,241,0.1)}
+  .ci-7{background:rgba(239,68,68,0.1)}.ci-8{background:rgba(34,211,238,0.1)}
+  .cat-info{position:relative;z-index:1;min-width:0}
+  .cat-name{font-weight:700;font-size:0.82rem;margin-bottom:0.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cat-count{font-size:0.65rem;color:var(--text-lo)}
+
+  /* ═══ SKILL CARD — Holographic Projection ═══ */
+  .skill-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem}
+  .skill-card{position:relative;border-radius:16px;overflow:hidden;cursor:pointer;
+    background:var(--glass);border:1px solid var(--glass-border);backdrop-filter:blur(20px);
+    transition:all 0.5s cubic-bezier(0.23,1,0.32,1);
+    transform-style:preserve-3d;perspective:1000px}
+  /* Holographic edge effect */
+  .skill-card::before{content:'';position:absolute;inset:-1px;border-radius:17px;z-index:-1;
+    background:conic-gradient(from var(--holo-angle,0deg),transparent 0%,var(--holo-1) 10%,transparent 20%,var(--holo-2) 40%,transparent 50%,var(--holo-3) 70%,transparent 80%);
+    opacity:0;transition:opacity 0.5s;animation:holoRotate 4s linear infinite}
+  @keyframes holoRotate{0%{--holo-angle:0deg}100%{--holo-angle:360deg}}
+  /* Mouse-tracking light */
+  .skill-card::after{content:'';position:absolute;inset:0;border-radius:16px;
+    background:radial-gradient(400px circle at var(--mx,50%) var(--my,50%),rgba(0,240,255,0.06),transparent 40%);
+    opacity:0;transition:opacity 0.3s;pointer-events:none}
+  .skill-card:hover{transform:translateY(-8px) rotateX(2deg);
+    border-color:rgba(0,240,255,0.15);box-shadow:0 25px 60px rgba(0,0,0,0.4),0 0 50px rgba(0,240,255,0.06)}
+  .skill-card:hover::before{opacity:1}
+  .skill-card:hover::after{opacity:1}
+
+  .sc-inner{padding:1.5rem;position:relative;z-index:1}
+  .sc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.85rem}
+  .sc-badges{display:flex;gap:0.35rem;flex-wrap:wrap}
+  .sc-badge{padding:2px 8px;border-radius:6px;font-size:0.65rem;font-weight:600;letter-spacing:0.01em}
+  .sc-badge.t{background:rgba(0,240,255,0.08);color:var(--cyan);border:1px solid rgba(0,240,255,0.12)}
+  .sc-badge.p{background:rgba(139,92,246,0.08);color:var(--violet);border:1px solid rgba(139,92,246,0.12)}
+  .sc-fav{width:32px;height:32px;border-radius:8px;border:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s;font-size:0.85rem;color:var(--text-lo)}
+  .sc-fav:hover,.sc-fav.on{color:var(--magenta);border-color:rgba(236,72,153,0.3);background:rgba(236,72,153,0.08);
+    box-shadow:0 0 12px rgba(236,72,153,0.15)}
+
+  .sc-name{font-size:1.1rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:0.5rem;transition:all 0.3s}
+  .skill-card:hover .sc-name{color:var(--cyan);text-shadow:0 0 20px rgba(0,240,255,0.2)}
+  .sc-desc{font-size:0.8rem;color:var(--text-mid);line-height:1.6;margin-bottom:0.85rem;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .sc-tags{display:flex;gap:0.3rem;flex-wrap:wrap;margin-bottom:0.85rem}
+  .sc-tag{padding:2px 7px;border-radius:4px;font-size:0.62rem;background:rgba(255,255,255,0.02);color:var(--text-lo);
+    border:1px solid rgba(255,255,255,0.04);transition:all 0.3s}
+  .skill-card:hover .sc-tag{border-color:rgba(0,240,255,0.08);color:var(--text-mid)}
+  .sc-meta{display:flex;gap:0.75rem;align-items:center;font-size:0.7rem;color:var(--text-lo);margin-bottom:0.85rem}
+  .sc-meta span{display:flex;align-items:center;gap:0.25rem}
+  .sc-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(0,240,255,0.08),transparent);margin-bottom:0.85rem}
+  .sc-bottom{display:flex;justify-content:space-between;align-items:center}
+  .sc-rating{display:flex;align-items:center;gap:0.4rem}
+  .sc-stars{color:var(--amber);font-size:0.72rem;letter-spacing:0.5px}
+  .sc-score{font-size:0.78rem;font-weight:700;color:var(--cyan)}
+  .sc-reviews{font-size:0.65rem;color:var(--text-lo)}
+  .sc-stats{display:flex;gap:0.6rem}
+  .sc-stat{font-size:0.68rem;color:var(--text-lo);display:flex;align-items:center;gap:0.2rem}
+
+  /* Data flow indicator on card */
+  .sc-flow{position:absolute;top:0;right:0;width:60px;height:60px;pointer-events:none;opacity:0;transition:opacity 0.4s}
+  .skill-card:hover .sc-flow{opacity:1}
+  .sc-flow-dot{position:absolute;width:3px;height:3px;border-radius:50%;background:var(--cyan);opacity:0}
+  .skill-card:hover .sc-flow-dot{animation:flowDot 2s infinite}
+  .sc-flow-dot:nth-child(1){top:10px;right:20px;animation-delay:0s}
+  .sc-flow-dot:nth-child(2){top:20px;right:35px;animation-delay:0.3s}
+  .sc-flow-dot:nth-child(3){top:30px;right:15px;animation-delay:0.6s}
+  .sc-flow-dot:nth-child(4){top:40px;right:28px;animation-delay:0.9s}
+  @keyframes flowDot{0%{opacity:0;transform:scale(0)}30%{opacity:0.8;transform:scale(1)}100%{opacity:0;transform:scale(0.5) translateY(-10px)}}
+
+  /* ═══ PAGE SEPARATOR — Neural Bridge ═══ */
+  .neural-bridge{position:relative;height:80px;margin:2rem 0;overflow:hidden}
+  .neural-bridge::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,transparent 5%,rgba(0,240,255,0.15) 30%,rgba(139,92,246,0.15) 50%,rgba(236,72,153,0.1) 70%,transparent 95%)}
+  .bridge-node{position:absolute;top:50%;width:8px;height:8px;border-radius:50%;transform:translateY(-50%);
+    background:var(--cyan);box-shadow:0 0 10px rgba(0,240,255,0.5);animation:bridgePulse 2s infinite}
+  .bridge-node:nth-child(1){left:20%;animation-delay:0s}
+  .bridge-node:nth-child(2){left:40%;background:var(--violet);box-shadow:0 0 10px rgba(139,92,246,0.5);animation-delay:0.4s}
+  .bridge-node:nth-child(3){left:60%;background:var(--magenta);box-shadow:0 0 10px rgba(236,72,153,0.5);animation-delay:0.8s}
+  .bridge-node:nth-child(4){left:80%;animation-delay:1.2s}
+  @keyframes bridgePulse{0%,100%{transform:translateY(-50%) scale(1);opacity:0.6}50%{transform:translateY(-50%) scale(1.5);opacity:1}}
+  .bridge-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    background:var(--bg-void);padding:0 1.25rem;font-size:0.65rem;color:var(--text-lo);text-transform:uppercase;letter-spacing:0.15em;font-weight:600}
+
+  /* ═══ SEARCH RESULTS PAGE — Neural Discovery ═══ */
+  .search-page{max-width:1200px;margin:0 auto;padding:2rem}
+  /* AI Insight Bar — replaces boring filter sidebar */
+  .ai-insight-bar{display:flex;gap:0.75rem;margin-bottom:1.5rem;flex-wrap:wrap;align-items:center}
+  .ai-insight-chip{display:inline-flex;align-items:center;gap:0.4rem;padding:6px 14px;border-radius:20px;font-size:0.75rem;
+    cursor:pointer;transition:all 0.4s cubic-bezier(0.23,1,0.32,1);border:1px solid var(--glass-border);
+    background:var(--glass);backdrop-filter:blur(10px);position:relative;overflow:hidden}
+  .ai-insight-chip::before{content:'';position:absolute;inset:0;border-radius:20px;
+    background:linear-gradient(135deg,rgba(0,240,255,0.1),rgba(139,92,246,0.05));opacity:0;transition:opacity 0.3s}
+  .ai-insight-chip:hover::before,.ai-insight-chip.active::before{opacity:1}
+  .ai-insight-chip:hover,.ai-insight-chip.active{transform:translateY(-2px);border-color:rgba(0,240,255,0.2);
+    box-shadow:0 6px 20px rgba(0,0,0,0.15)}
+  .ai-insight-chip.active{border-color:var(--cyan);box-shadow:0 0 12px rgba(0,240,255,0.15)}
+  .ai-insight-chip .chip-icon{font-size:0.8rem;position:relative;z-index:1}
+  .ai-insight-chip .chip-text{position:relative;z-index:1;font-weight:500;color:var(--text-mid)}
+  .ai-insight-chip.active .chip-text{color:var(--cyan)}
+  .ai-insight-chip .chip-count{font-size:0.62rem;color:var(--text-lo);background:rgba(255,255,255,0.05);
+    padding:1px 6px;border-radius:10px;position:relative;z-index:1}
+  .ai-insight-chip.active .chip-count{background:rgba(0,240,255,0.1);color:var(--cyan)}
+
+  /* Search context — AI summary of results */
+  .search-context{display:flex;align-items:flex-start;gap:1rem;padding:1.25rem 1.5rem;border-radius:16px;
+    background:var(--glass);border:1px solid var(--glass-border);backdrop-filter:blur(20px);
+    margin-bottom:1.5rem;position:relative;overflow:hidden}
+  .search-context::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,var(--cyan),var(--violet),var(--magenta));opacity:0.5}
+  .search-context::after{content:'';position:absolute;inset:0;
+    background:linear-gradient(135deg,rgba(0,240,255,0.03),rgba(139,92,246,0.02));pointer-events:none}
+  .ctx-ai-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--cyan),var(--violet));
+    display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;position:relative;z-index:1;
+    animation:ctxPulse 3s ease-in-out infinite}
+  @keyframes ctxPulse{0%,100%{box-shadow:0 0 10px rgba(0,240,255,0.2)}50%{box-shadow:0 0 20px rgba(0,240,255,0.4)}}
+  .ctx-content{flex:1;position:relative;z-index:1}
+  .ctx-label{font-size:0.65rem;color:var(--cyan);text-transform:uppercase;letter-spacing:0.1em;font-weight:600;margin-bottom:0.3rem}
+  .ctx-text{font-size:0.82rem;color:var(--text-mid);line-height:1.6}
+  .ctx-text strong{color:var(--text-hi);font-weight:600}
+  .ctx-text em{color:var(--cyan);font-style:normal;font-weight:500}
+  .ctx-actions{display:flex;gap:0.5rem;flex-shrink:0;position:relative;z-index:1}
+  .ctx-btn{padding:5px 12px;border-radius:8px;font-size:0.7rem;font-weight:600;cursor:pointer;transition:all 0.3s;border:1px solid var(--glass-border);
+    background:var(--glass);color:var(--text-mid);backdrop-filter:blur(10px)}
+  .ctx-btn:hover{border-color:rgba(0,240,255,0.2);color:var(--cyan)}
+  .ctx-btn.primary{background:linear-gradient(135deg,var(--cyan),var(--violet));color:#fff;border:none}
+  .ctx-btn.primary:hover{box-shadow:0 0 15px rgba(0,240,255,0.3);transform:translateY(-1px)}
+
+  /* Result header with view toggle */
+  .sr-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem}
+  .sr-info{display:flex;align-items:baseline;gap:0.75rem}
+  .sr-info h2{font-size:1rem;font-weight:600}
+  .sr-info h2 em{color:var(--cyan);font-style:normal}
+  .sr-info span{font-size:0.75rem;color:var(--text-lo)}
+  .sr-views{display:flex;gap:0.35rem}
+  .sr-view-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--glass-border);background:var(--glass);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s;color:var(--text-lo);font-size:0.8rem}
+  .sr-view-btn.active{border-color:rgba(0,240,255,0.2);color:var(--cyan);background:rgba(0,240,255,0.08)}
+  .sr-view-btn:hover{border-color:rgba(0,240,255,0.15);color:var(--cyan)}
+  .sr-sort{display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:var(--text-lo)}
+  .sr-sort select{background:var(--glass);border:1px solid var(--glass-border);border-radius:8px;padding:4px 10px;
+    color:var(--text-mid);font-size:0.75rem;cursor:pointer;outline:none;backdrop-filter:blur(10px)}
+
+  /* Enhanced result card with relevance indicator */
+  .result-card{position:relative;border-radius:16px;overflow:hidden;cursor:pointer;
+    background:var(--glass);border:1px solid var(--glass-border);backdrop-filter:blur(20px);
+    transition:all 0.5s cubic-bezier(0.23,1,0.32,1);margin-bottom:0.85rem}
+  .result-card::before{content:'';position:absolute;inset:-1px;border-radius:17px;z-index:-1;
+    background:conic-gradient(from var(--holo-angle,0deg),transparent 0%,var(--holo-1) 10%,transparent 20%,var(--holo-2) 40%,transparent 50%,var(--holo-3) 70%,transparent 80%);
+    opacity:0;transition:opacity 0.5s}
+  .result-card::after{content:'';position:absolute;inset:0;border-radius:16px;
+    background:radial-gradient(400px circle at var(--mx,50%) var(--my,50%),rgba(0,240,255,0.04),transparent 40%);
+    opacity:0;transition:opacity 0.3s;pointer-events:none}
+  .result-card:hover{transform:translateY(-4px);border-color:rgba(0,240,255,0.12);
+    box-shadow:0 20px 50px var(--card-shadow),0 0 40px rgba(0,240,255,0.04)}
+  .result-card:hover::before{opacity:1}
+  .result-card:hover::after{opacity:1}
+  /* Relevance bar on left */
+  .rel-bar{position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:0 2px 2px 0;transition:all 0.4s}
+  .rel-bar.high{background:linear-gradient(180deg,var(--cyan),var(--violet))}
+  .rel-bar.mid{background:linear-gradient(180deg,var(--amber),var(--violet))}
+  .rel-bar.low{background:var(--text-lo)}
+  .rc-inner{padding:1.25rem 1.25rem 1.25rem 1.5rem;position:relative;z-index:1}
+  .rc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.6rem}
+  .rc-badges{display:flex;gap:0.3rem;flex-wrap:wrap}
+  .rc-source{font-size:0.65rem;color:var(--text-lo);display:flex;align-items:center;gap:0.3rem}
+  .rc-source-dot{width:5px;height:5px;border-radius:50%;background:var(--emerald)}
+  .rc-name{font-size:1.05rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:0.35rem;transition:all 0.3s}
+  .result-card:hover .rc-name{color:var(--cyan)}
+  .rc-desc{font-size:0.8rem;color:var(--text-mid);line-height:1.6;margin-bottom:0.65rem;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .rc-desc em{color:var(--cyan);font-style:normal;font-weight:500}
+  .rc-tags{display:flex;gap:0.3rem;flex-wrap:wrap;margin-bottom:0.65rem}
+  .rc-bottom{display:flex;justify-content:space-between;align-items:center}
+  .rc-meta{display:flex;gap:0.75rem;align-items:center;font-size:0.7rem;color:var(--text-lo)}
+  .rc-meta span{display:flex;align-items:center;gap:0.2rem}
+  .rc-rating{display:flex;align-items:center;gap:0.3rem}
+  .rc-stars{color:var(--amber);font-size:0.7rem;letter-spacing:0.5px}
+  .rc-score{font-size:0.75rem;font-weight:700;color:var(--cyan)}
+  .rc-actions{display:flex;gap:0.35rem}
+  .rc-act-btn{width:28px;height:28px;border-radius:7px;border:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s;font-size:0.75rem;color:var(--text-lo)}
+  .rc-act-btn:hover{border-color:rgba(0,240,255,0.15);color:var(--cyan);background:rgba(0,240,255,0.05)}
+  .rc-act-btn.fav:hover,.rc-act-btn.fav.on{color:var(--magenta);border-color:rgba(236,72,153,0.2);background:rgba(236,72,153,0.06)}
+
+  /* Pagination — neural style */
+  .sr-pagination{display:flex;justify-content:center;align-items:center;gap:0.35rem;margin-top:2rem}
+  .pg-btn{width:36px;height:36px;border-radius:10px;border:1px solid var(--glass-border);background:var(--glass);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s;
+    font-size:0.8rem;font-weight:600;color:var(--text-mid);backdrop-filter:blur(10px)}
+  .pg-btn:hover{border-color:rgba(0,240,255,0.15);color:var(--cyan);transform:translateY(-2px)}
+  .pg-btn.active{background:linear-gradient(135deg,var(--cyan),var(--violet));color:#fff;border:none;
+    box-shadow:0 0 15px rgba(0,240,255,0.2)}
+  .pg-dots{color:var(--text-lo);font-size:0.8rem;letter-spacing:2px}
+
+  /* ═══ DETAIL PAGE ═══ */
+  .detail-layout{display:grid;grid-template-columns:1fr 300px;gap:1.5rem;max-width:1200px;margin:0 auto;padding:2rem}
+  .breadcrumb{display:flex;gap:0.4rem;font-size:0.72rem;color:var(--text-lo);margin-bottom:1.5rem;align-items:center}
+  .breadcrumb a{color:var(--text-lo);text-decoration:none;transition:color 0.2s}
+  .breadcrumb a:hover{color:var(--cyan)}
+  .bc-sep{opacity:0.3}
+  .bc-cur{color:var(--text-hi)}
+
+  .d-name{font-size:2rem;font-weight:900;letter-spacing:-0.03em;margin-bottom:0.5rem;
+    background:linear-gradient(135deg,var(--text-hi),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .d-desc{color:var(--text-mid);font-size:0.9rem;line-height:1.7;margin-bottom:1.25rem}
+  .d-badges{display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:1.25rem}
+  .d-badge{padding:3px 12px;border-radius:8px;font-size:0.7rem;font-weight:600}
+  .d-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0.75rem;margin-bottom:1.5rem;padding:1.25rem;
+    background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;backdrop-filter:blur(20px)}
+  .d-stat{text-align:center}
+  .d-stat-v{font-size:1.4rem;font-weight:900;
+    background:linear-gradient(135deg,var(--cyan),var(--violet));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .d-stat-l{font-size:0.65rem;color:var(--text-lo);margin-top:0.1rem}
+
+  .code-block{background:rgba(2,2,8,0.8);border:1px solid rgba(0,240,255,0.08);border-radius:12px;padding:1.25rem;
+    font-family:'SF Mono',Monaco,Consolas,monospace;font-size:0.8rem;color:#e6edf3;margin-bottom:1.5rem;
+    position:relative;overflow:hidden}
+  .code-block::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,var(--cyan),var(--violet));opacity:0.3}
+  .code-block .cm{color:#6e7681}.code-block .cmd{color:#79c0ff}.code-block .fl{color:#ffa657}.code-block .st{color:#a5d6ff}
+  .code-dots{display:flex;gap:6px;margin-bottom:0.75rem}
+  .code-dots span{width:10px;height:10px;border-radius:50%}
+  .code-dots span:nth-child(1){background:#f87171}.code-dots span:nth-child(2){background:#fbbf24}.code-dots span:nth-child(3){background:#34d399}
+
+  .review{background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;padding:1rem;margin-bottom:0.6rem;
+    transition:all 0.3s}
+  .review:hover{border-color:rgba(0,240,255,0.1)}
+  .rv-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem}
+  .rv-user{display:flex;align-items:center;gap:0.6rem}
+  .rv-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--violet))}
+  .rv-name{font-weight:600;font-size:0.82rem}
+  .rv-time{font-size:0.65rem;color:var(--text-lo)}
+  .rv-stars{color:var(--amber);font-size:0.75rem;letter-spacing:0.5px}
+  .rv-text{font-size:0.8rem;color:var(--text-mid);line-height:1.6}
+
+  .sidebar{position:sticky;top:80px}
+  .sb-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;
+    padding:1.1rem;margin-bottom:0.75rem;backdrop-filter:blur(20px)}
+  .sb-title{font-weight:700;font-size:0.82rem;margin-bottom:0.85rem;padding-bottom:0.6rem;
+    border-bottom:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;gap:0.4rem}
+  .sb-title svg{width:14px;height:14px;color:var(--cyan)}
+  .rel-item{display:flex;gap:0.6rem;padding:0.6rem 0;border-bottom:1px solid rgba(255,255,255,0.03);cursor:pointer;transition:all 0.3s}
+  .rel-item:last-child{border-bottom:none}
+  .rel-item:hover{padding-left:0.4rem}
+  .rel-icon{width:34px;height:34px;border-radius:8px;background:rgba(0,240,255,0.06);display:flex;align-items:center;
+    justify-content:center;font-size:0.85rem;flex-shrink:0;border:1px solid rgba(0,240,255,0.08)}
+  .rel-name{font-weight:600;font-size:0.78rem;margin-bottom:0.1rem;transition:color 0.2s}
+  .rel-item:hover .rel-name{color:var(--cyan)}
+  .rel-desc{font-size:0.65rem;color:var(--text-lo);display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+
+  /* ═══ RANKING ═══ */
+  .tabs{display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,0.04);margin-bottom:1.5rem}
+  .tab{padding:0.7rem 1.25rem;font-size:0.82rem;color:var(--text-lo);cursor:pointer;border-bottom:2px solid transparent;
+    transition:all 0.3s;font-weight:500;position:relative}
+  .tab.active{color:var(--cyan)}
+  .tab.active::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;
+    background:var(--cyan);box-shadow:0 0 8px rgba(0,240,255,0.4)}
+  .tab:hover{color:var(--text-hi)}
+  .rank-list{max-width:760px;margin:0 auto}
+  .rank-item{display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;
+    background:var(--glass);border:1px solid var(--glass-border);border-radius:12px;margin-bottom:0.6rem;
+    transition:all 0.4s cubic-bezier(0.23,1,0.32,1);position:relative;overflow:hidden}
+  .rank-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:0;
+    background:linear-gradient(90deg,rgba(0,240,255,0.04),transparent);transition:width 0.4s}
+  .rank-item:hover{transform:translateX(4px);border-color:rgba(0,240,255,0.12);box-shadow:0 8px 30px rgba(0,0,0,0.3)}
+  .rank-item:hover::before{width:100%}
+  .rank-n{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    font-weight:900;font-size:0.9rem;flex-shrink:0;position:relative;z-index:1}
+  .rn-1{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#78350f;box-shadow:0 0 15px rgba(251,191,36,0.25)}
+  .rn-2{background:linear-gradient(135deg,#e2e8f0,#94a3b8);color:#1e293b;box-shadow:0 0 12px rgba(226,232,240,0.15)}
+  .rn-3{background:linear-gradient(135deg,#fb923c,#ea580c);color:#7c2d12;box-shadow:0 0 12px rgba(251,146,60,0.15)}
+  .rn-x{background:rgba(255,255,255,0.03);color:var(--text-lo);border:1px solid rgba(255,255,255,0.05)}
+  .rank-info{flex:1;position:relative;z-index:1}
+  .rank-name{font-weight:700;font-size:0.88rem;margin-bottom:0.15rem;transition:color 0.3s}
+  .rank-item:hover .rank-name{color:var(--cyan)}
+  .rank-desc{font-size:0.72rem;color:var(--text-lo);display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+  .rank-meta{display:flex;gap:1.25rem;align-items:center;flex-shrink:0;position:relative;z-index:1}
+  .rank-meta span{font-size:0.72rem;color:var(--text-mid)}
+
+  /* ═══ FOOTER ═══ */
+  .footer{border-top:1px solid var(--glass-border);padding:2.5rem 2rem;margin-top:3rem;position:relative}
+  .footer::before{content:'';position:absolute;top:-1px;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,transparent 10%,var(--cyan) 30%,var(--violet) 50%,var(--magenta) 70%,transparent 90%);opacity:0.2}
+  .footer-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:2.5rem}
+  .footer-brand{font-size:1rem;font-weight:800;
+    background:linear-gradient(135deg,var(--cyan),var(--violet));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:0.5rem}
+  .footer-desc{font-size:0.78rem;color:var(--text-lo);line-height:1.6}
+  .footer-col-title{font-weight:600;font-size:0.75rem;margin-bottom:0.75rem;color:var(--text-mid);text-transform:uppercase;letter-spacing:0.05em}
+  .footer-links a{display:block;color:var(--text-lo);text-decoration:none;font-size:0.78rem;padding:0.2rem 0;transition:all 0.2s}
+  .footer-links a:hover{color:var(--cyan);transform:translateX(3px)}
+  .footer-bottom{max-width:1200px;margin:1.5rem auto 0;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,0.03);
+    text-align:center;font-size:0.7rem;color:var(--text-lo)}
+
+  /* ═══ SCROLL REVEAL ANIMATION ═══ */
+  .reveal{opacity:0;transform:translateY(30px);transition:all 0.8s cubic-bezier(0.23,1,0.32,1)}
+  .reveal.visible{opacity:1;transform:translateY(0)}
+  .reveal-delay-1{transition-delay:0.1s}
+  .reveal-delay-2{transition-delay:0.2s}
+  .reveal-delay-3{transition-delay:0.3s}
+  .reveal-delay-4{transition-delay:0.4s}
+
+  /* ═══ GLITCH TEXT EFFECT ═══ */
+  .glitch{position:relative}
+  .glitch::before,.glitch::after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;height:100%;
+    background:var(--bg-void);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .glitch::before{left:2px;text-shadow:-2px 0 var(--cyan);clip-path:inset(0 0 0 0);animation:glitch1 3s infinite linear alternate-reverse}
+  .glitch::after{left:-2px;text-shadow:2px 0 var(--magenta);clip-path:inset(0 0 0 0);animation:glitch2 3s infinite linear alternate-reverse}
+  @keyframes glitch1{0%{clip-path:inset(40% 0 61% 0)}20%{clip-path:inset(92% 0 1% 0)}40%{clip-path:inset(43% 0 1% 0)}60%{clip-path:inset(25% 0 58% 0)}80%{clip-path:inset(54% 0 7% 0)}100%{clip-path:inset(58% 0 43% 0)}}
+  @keyframes glitch2{0%{clip-path:inset(65% 0 13% 0)}20%{clip-path:inset(79% 0 14% 0)}40%{clip-path:inset(48% 0 38% 0)}60%{clip-path:inset(10% 0 85% 0)}80%{clip-path:inset(75% 0 5% 0)}100%{clip-path:inset(37% 0 53% 0)}}
+
+  /* ═══ DATA STREAM ANIMATION ═══ */
+  .data-stream{position:absolute;width:1px;background:linear-gradient(180deg,transparent,var(--cyan),transparent);
+    opacity:0.15;animation:streamFlow 3s linear infinite;pointer-events:none}
+  @keyframes streamFlow{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
+</style>
+</head>
+<body>
+
+<!-- Neural Background -->
+<canvas id="neural-bg"></canvas>
+<div class="nebula nebula-1"></div>
+<div class="nebula nebula-2"></div>
+<div class="nebula nebula-3"></div>
+
+<div class="content-wrap">
+
+<!-- ═══════════════════════════════════════════════════════════
+     PAGE 1: HOMEPAGE
+     ═══════════════════════════════════════════════════════════ -->
+<nav class="nav">
+  <div class="nav-logo">
+    <div class="nav-logo-mark">
+      <svg viewBox="0 0 32 32" fill="none">
+        <circle cx="16" cy="16" r="14" stroke="url(#lg1)" stroke-width="1.5" opacity="0.6"/>
+        <circle cx="16" cy="16" r="8" stroke="url(#lg1)" stroke-width="1" opacity="0.4"/>
+        <circle cx="16" cy="16" r="3" fill="url(#lg1)"/>
+        <line x1="16" y1="2" x2="16" y2="8" stroke="url(#lg1)" stroke-width="1" opacity="0.3"/>
+        <line x1="16" y1="24" x2="16" y2="30" stroke="url(#lg1)" stroke-width="1" opacity="0.3"/>
+        <line x1="2" y1="16" x2="8" y2="16" stroke="url(#lg1)" stroke-width="1" opacity="0.3"/>
+        <line x1="24" y1="16" x2="30" y2="16" stroke="url(#lg1)" stroke-width="1" opacity="0.3"/>
+        <defs><linearGradient id="lg1" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#00f0ff"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+      </svg>
+    </div>
+    <div class="nav-logo-text">Skills Hub</div>
+  </div>
+  <div class="nav-links">
+    <a class="nav-link active">首页</a>
+    <a class="nav-link">探索</a>
+    <a class="nav-link">分类</a>
+    <a class="nav-link">排行榜</a>
+    <a class="nav-link">收藏</a>
+  </div>
+  <div class="nav-right">
+    <div class="lang-switch">
+      <button class="lang-opt active">中</button>
+      <button class="lang-opt">EN</button>
+    </div>
+    <div class="nav-status"><span class="status-dot"></span> Online</div>
+    <div class="theme-toggle" id="themeToggle" title="切换主题">
+      <span class="icon-moon">🌙</span>
+      <span class="icon-sun">☀️</span>
+    </div>
+    <div class="nav-avatar"></div>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-aura"></div>
+  <div class="hero-chip">
+    <div class="hero-chip-icon">⚡</div>
+    Powered by AI — 已收录 500+ 技能
+  </div>
+  <h1 class="hero-title">
+    <span class="line1">发现你的下一个</span>
+    <span class="line2 glitch" data-text="AI 超能力">AI 超能力</span>
+  </h1>
+  <p class="hero-sub">跨生态系统的 AI 技能搜索引擎 — 发现 MCP Server、AI Agent、RAG 工具等最前沿的智能技能</p>
+
+  <div class="search-terminal">
+    <div class="search-shell">
+      <div class="search-bar">
+        <span class="search-prefix">❯</span>
+        <input class="search-input" type="text" placeholder="搜索 AI 技能、MCP Server、Agent 工具..." />
+        <button class="search-exec">搜索</button>
+      </div>
+    </div>
+    <div class="thoughts">
+      <span class="thought">MCP Server</span>
+      <span class="thought">AI Agent</span>
+      <span class="thought">RAG Pipeline</span>
+      <span class="thought">Code Gen</span>
+      <span class="thought">Embedding</span>
+    </div>
+  </div>
+
+  <div class="live-stats">
+    <div class="live-stat"><div class="live-stat-val" data-target="527">0</div><div class="live-stat-label">Skills</div></div>
+    <div class="live-stat"><div class="live-stat-val" data-target="48">0</div><div class="live-stat-label">Categories</div></div>
+    <div class="live-stat"><div class="live-stat-val" data-target="12">0</div><div class="live-stat-label">Ecosystems</div></div>
+    <div class="live-stat"><div class="live-stat-val" data-target="8923">0</div><div class="live-stat-label">Users</div></div>
+  </div>
+</div>
+
+<div class="section reveal">
+  <div class="sec-head">
+    <div class="sec-title"><div class="sec-title-icon t1">🧠</div> 热门分类</div>
+    <a class="sec-more">查看全部 →</a>
+  </div>
+  <div class="cat-grid">
+    <div class="cat-node reveal reveal-delay-1"><div class="cat-icon ci-1">🤖</div><div class="cat-info"><div class="cat-name">AI/ML 工具</div><div class="cat-count">128 skills</div></div></div>
+    <div class="cat-node reveal reveal-delay-1"><div class="cat-icon ci-2">🔗</div><div class="cat-info"><div class="cat-name">API 工具</div><div class="cat-count">86 skills</div></div></div>
+    <div class="cat-node reveal reveal-delay-2"><div class="cat-icon ci-3">📊</div><div class="cat-info"><div class="cat-name">数据分析</div><div class="cat-count">64 skills</div></div></div>
+    <div class="cat-node reveal reveal-delay-2"><div class="cat-icon ci-4">💻</div><div class="cat-info"><div class="cat-name">代码生成</div><div class="cat-count">92 skills</div></div></div>
+    <div class="cat-node reveal reveal-delay-3"><div class="cat-icon ci-5">📝</div><div class="cat-info"><div class="cat-name">内容创作</div><div class="cat-count">53 skills</div></div></div>
+    <div class="cat-node reveal reveal-delay-3"><div class="cat-icon ci-6">🎨</div><div class="cat-info"><div class="cat-name">设计工具</div><div class="cat-count">41 skills</div></div></div>
+    <div class="cat-node reveal reveal-delay-4"><div class="cat-icon ci-7">🔧</div><div class="cat-info"><div class="cat-name">DevOps</div><div class="cat-count">37 skills</div></div></div>
+    <div class="cat-node reveal reveal-delay-4"><div class="cat-icon ci-8">🔒</div><div class="cat-info"><div class="cat-name">安全</div><div class="cat-count">29 skills</div></div></div>
+  </div>
+</div>
+
+<div class="section reveal">
+  <div class="sec-head">
+    <div class="sec-title"><div class="sec-title-icon t2">🔥</div> 热门技能</div>
+    <a class="sec-more">查看全部 →</a>
+  </div>
+  <div class="skill-grid">
+    <div class="skill-card reveal reveal-delay-1">
+      <div class="sc-flow"><div class="sc-flow-dot"></div><div class="sc-flow-dot"></div><div class="sc-flow-dot"></div><div class="sc-flow-dot"></div></div>
+      <div class="sc-inner">
+        <div class="sc-top">
+          <div class="sc-badges"><span class="sc-badge t">MCP Server</span><span class="sc-badge p">TypeScript</span></div>
+          <div class="sc-fav">♡</div>
+        </div>
+        <div class="sc-name">awesome-mcp-servers</div>
+        <div class="sc-desc">A curated list of awesome Model Context Protocol servers. Discover the best MCP servers for building AI-powered applications with seamless tool integration.</div>
+        <div class="sc-tags"><span class="sc-tag">mcp</span><span class="sc-tag">server</span><span class="sc-tag">ai</span><span class="sc-tag">protocol</span></div>
+        <div class="sc-meta"><span>👤 smithery-ai</span><span>·</span><span>2天前</span><span>·</span><span>TypeScript</span></div>
+        <div class="sc-divider"></div>
+        <div class="sc-bottom">
+          <div class="sc-rating"><span class="sc-stars">★★★★★</span><span class="sc-score">4.8</span><span class="sc-reviews">(24)</span></div>
+          <div class="sc-stats"><span class="sc-stat">⭐ 12.5k</span><span class="sc-stat">🔄 156</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="skill-card reveal reveal-delay-2">
+      <div class="sc-flow"><div class="sc-flow-dot"></div><div class="sc-flow-dot"></div><div class="sc-flow-dot"></div><div class="sc-flow-dot"></div></div>
+      <div class="sc-inner">
+        <div class="sc-top">
+          <div class="sc-badges"><span class="sc-badge t">AI Agent</span><span class="sc-badge p">Python</span></div>
+          <div class="sc-fav on">♥</div>
+        </div>
+        <div class="sc-name">langchain-tools</div>
+        <div class="sc-desc">Comprehensive toolkit for building LangChain-based AI agents with pre-built integrations, templates, and production-ready deployment guides.</div>
+        <div class="sc-tags"><span class="sc-tag">langchain</span><span class="sc-tag">agent</span><span class="sc-tag">llm</span><span class="sc-tag">orchestration</span></div>
+        <div class="sc-meta"><span>👤 langchain-ai</span><span>·</span><span>5天前</span><span>·</span><span>Python</span></div>
+        <div class="sc-divider"></div>
+        <div class="sc-bottom">
+          <div class="sc-rating"><span class="sc-stars">★★★★☆</span><span class="sc-score">4.5</span><span class="sc-reviews">(18)</span></div>
+          <div class="sc-stats"><span class="sc-stat">⭐ 8.2k</span><span class="sc-stat">🔄 98</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="skill-card reveal reveal-delay-3">
+      <div class="sc-flow"><div class="sc-flow-dot"></div><div class="sc-flow-dot"></div><div class="sc-flow-dot"></div><div class="sc-flow-dot"></div></div>
+      <div class="sc-inner">
+        <div class="sc-top">
+          <div class="sc-badges"><span class="sc-badge t">RAG</span><span class="sc-badge p">Rust</span></div>
+          <div class="sc-fav">♡</div>
+        </div>
+        <div class="sc-name">vector-search-engine</div>
+        <div class="sc-desc">High-performance vector search engine optimized for RAG pipelines. Supports multiple embedding models with sub-millisecond latency.</div>
+        <div class="sc-tags"><span class="sc-tag">rag</span><span class="sc-tag">vector</span><span class="sc-tag">embedding</span><span class="sc-tag">search</span></div>
+        <div class="sc-meta"><span>👤 vector-dev</span><span>·</span><span>1周前</span><span>·</span><span>Rust</span></div>
+        <div class="sc-divider"></div>
+        <div class="sc-bottom">
+          <div class="sc-rating"><span class="sc-stars">★★★★☆</span><span class="sc-score">4.3</span><span class="sc-reviews">(12)</span></div>
+          <div class="sc-stats"><span class="sc-stat">⭐ 6.7k</span><span class="sc-stat">🔄 72</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="skill-card reveal reveal-delay-4">
+      <div class="sc-flow"><div class="sc-flow-dot"></div><div class="sc-flow-dot"></div><div class="sc-flow-dot"></div><div class="sc-flow-dot"></div></div>
+      <div class="sc-inner">
+        <div class="sc-top">
+          <div class="sc-badges"><span class="sc-badge t">Code</span><span class="sc-badge p">Go</span></div>
+          <div class="sc-fav">♡</div>
+        </div>
+        <div class="sc-name">ai-code-reviewer</div>
+        <div class="sc-desc">AI-powered code review tool that provides intelligent suggestions, identifies potential bugs, and enforces coding best practices automatically.</div>
+        <div class="sc-tags"><span class="sc-tag">code-review</span><span class="sc-tag">quality</span><span class="sc-tag">best-practices</span></div>
+        <div class="sc-meta"><span>👤 coder-labs</span><span>·</span><span>3天前</span><span>·</span><span>Go</span></div>
+        <div class="sc-divider"></div>
+        <div class="sc-bottom">
+          <div class="sc-rating"><span class="sc-stars">★★★★☆</span><span class="sc-score">4.1</span><span class="sc-reviews">(9)</span></div>
+          <div class="sc-stats"><span class="sc-stat">⭐ 5.3k</span><span class="sc-stat">🔄 45</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div><div class="footer-brand">AI Skills Hub</div><div class="footer-desc">跨生态系统的 AI 技能搜索聚合平台，发现最适合你的智能工具。</div></div>
+    <div><div class="footer-col-title">产品</div><div class="footer-links"><a href="#">探索</a><a href="#">分类</a><a href="#">排行榜</a><a href="#">提交技能</a></div></div>
+    <div><div class="footer-col-title">资源</div><div class="footer-links"><a href="#">API 文档</a><a href="#">GitHub</a><a href="#">状态</a></div></div>
+    <div><div class="footer-col-title">关于</div><div class="footer-links"><a href="#">关于我们</a><a href="#">联系方式</a><a href="#">隐私政策</a></div></div>
+  </div>
+  <div class="footer-bottom">© 2026 AI Skills Hub. All rights reserved.</div>
+</footer>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PAGE 2: SEARCH RESULTS
+     ═══════════════════════════════════════════════════════════ -->
+<div class="neural-bridge">
+  <div class="bridge-node"></div><div class="bridge-node"></div><div class="bridge-node"></div><div class="bridge-node"></div>
+  <div class="bridge-label">PAGE 2 — SEARCH RESULTS</div>
+</div>
+
+<div class="search-page">
+  <!-- AI Insight Filter Bar -->
+  <div class="ai-insight-bar">
+    <div class="ai-insight-chip active"><span class="chip-icon">🎯</span><span class="chip-text">全部</span><span class="chip-count">24</span></div>
+    <div class="ai-insight-chip"><span class="chip-icon">🤖</span><span class="chip-text">MCP Server</span><span class="chip-count">12</span></div>
+    <div class="ai-insight-chip"><span class="chip-icon">🧠</span><span class="chip-text">AI Agent</span><span class="chip-count">6</span></div>
+    <div class="ai-insight-chip"><span class="chip-icon">📊</span><span class="chip-text">RAG</span><span class="chip-count">4</span></div>
+    <div class="ai-insight-chip"><span class="chip-icon">💻</span><span class="chip-text">Code Gen</span><span class="chip-count">2</span></div>
+    <div class="ai-insight-chip" style="margin-left:auto"><span class="chip-icon">⚙️</span><span class="chip-text">更多筛选</span></div>
+  </div>
+
+  <!-- AI Context Summary -->
+  <div class="search-context">
+    <div class="ctx-ai-icon">🧠</div>
+    <div class="ctx-content">
+      <div class="ctx-label">AI 智能分析</div>
+      <div class="ctx-text">找到 <strong>24</strong> 个与 "<em>mcp server</em>" 相关的结果。其中 <strong>12</strong> 个为 MCP 协议服务器，<strong>6</strong> 个为 AI Agent 框架。推荐优先查看 <em>awesome-mcp-servers</em>，它是社区评分最高的精选合集。</div>
+    </div>
+    <div class="ctx-actions">
+      <button class="ctx-btn">收起</button>
+      <button class="ctx-btn primary">深度分析</button>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="sr-toolbar">
+    <div class="sr-info">
+      <h2>搜索结果 · <em>24</em> 条</h2>
+      <span>按相关性排序</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:1rem">
+      <div class="sr-sort">
+        <span>排序</span>
+        <select><option>相关性</option><option>最新</option><option>评分</option><option>热度</option></select>
+      </div>
+      <div class="sr-views">
+        <div class="sr-view-btn active">☰</div>
+        <div class="sr-view-btn">⊞</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result Cards -->
+  <div class="result-card">
+    <div class="rel-bar high"></div>
+    <div class="rc-inner">
+      <div class="rc-top">
+        <div style="display:flex;align-items:center;gap:0.75rem">
+          <div class="rc-badges"><span class="sc-badge t">MCP Server</span><span class="sc-badge p">TypeScript</span></div>
+          <div class="rc-source"><span class="rc-source-dot"></span> GitHub · 已验证</div>
+        </div>
+        <div class="rc-actions"><div class="rc-act-btn fav">♡</div><div class="rc-act-btn">⋯</div></div>
+      </div>
+      <div class="rc-name">awesome-mcp-servers</div>
+      <div class="rc-desc">A curated list of awesome <em>Model Context Protocol servers</em>. Discover the best MCP servers for building AI-powered applications with seamless tool integration and context management.</div>
+      <div class="rc-tags"><span class="sc-tag">mcp</span><span class="sc-tag">server</span><span class="sc-tag">ai</span><span class="sc-tag">protocol</span><span class="sc-tag">tool-integration</span></div>
+      <div class="rc-bottom">
+        <div class="rc-meta"><span>👤 smithery-ai</span><span>·</span><span>2天前</span><span>·</span><span>⭐ 12.5k</span><span>·</span><span>🔄 156</span></div>
+        <div class="rc-rating"><span class="rc-stars">★★★★★</span><span class="rc-score">4.8</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-card">
+    <div class="rel-bar high"></div>
+    <div class="rc-inner">
+      <div class="rc-top">
+        <div style="display:flex;align-items:center;gap:0.75rem">
+          <div class="rc-badges"><span class="sc-badge t">MCP Server</span><span class="sc-badge p">Python</span></div>
+          <div class="rc-source"><span class="rc-source-dot"></span> GitHub · 已验证</div>
+        </div>
+        <div class="rc-actions"><div class="rc-act-btn fav">♡</div><div class="rc-act-btn">⋯</div></div>
+      </div>
+      <div class="rc-name">mcp-file-system</div>
+      <div class="rc-desc">File system <em>MCP server</em> enabling AI models to read, write, and manage files securely with sandboxed access controls and real-time file watching capabilities.</div>
+      <div class="rc-tags"><span class="sc-tag">mcp</span><span class="sc-tag">filesystem</span><span class="sc-tag">sandbox</span></div>
+      <div class="rc-bottom">
+        <div class="rc-meta"><span>👤 mcp-dev</span><span>·</span><span>4天前</span><span>·</span><span>⭐ 3.2k</span><span>·</span><span>🔄 89</span></div>
+        <div class="rc-rating"><span class="rc-stars">★★★★☆</span><span class="rc-score">4.5</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-card">
+    <div class="rel-bar mid"></div>
+    <div class="rc-inner">
+      <div class="rc-top">
+        <div style="display:flex;align-items:center;gap:0.75rem">
+          <div class="rc-badges"><span class="sc-badge t">MCP Server</span><span class="sc-badge p">TypeScript</span></div>
+          <div class="rc-source"><span class="rc-source-dot"></span> npm · 已验证</div>
+        </div>
+        <div class="rc-actions"><div class="rc-act-btn fav on">♥</div><div class="rc-act-btn">⋯</div></div>
+      </div>
+      <div class="rc-name">mcp-web-browser</div>
+      <div class="rc-desc">Web browsing <em>MCP server</em> with headless browser support for AI agents. Enables web scraping, form filling, screenshot capture, and multi-tab management.</div>
+      <div class="rc-tags"><span class="sc-tag">mcp</span><span class="sc-tag">browser</span><span class="sc-tag">web</span><span class="sc-tag">scraping</span></div>
+      <div class="rc-bottom">
+        <div class="rc-meta"><span>👤 browser-ai</span><span>·</span><span>1周前</span><span>·</span><span>⭐ 2.8k</span><span>·</span><span>🔄 67</span></div>
+        <div class="rc-rating"><span class="rc-stars">★★★★☆</span><span class="rc-score">4.3</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-card">
+    <div class="rel-bar mid"></div>
+    <div class="rc-inner">
+      <div class="rc-top">
+        <div style="display:flex;align-items:center;gap:0.75rem">
+          <div class="rc-badges"><span class="sc-badge t">AI Agent</span><span class="sc-badge p">Python</span></div>
+          <div class="rc-source"><span class="rc-source-dot"></span> PyPI · 已验证</div>
+        </div>
+        <div class="rc-actions"><div class="rc-act-btn fav">♡</div><div class="rc-act-btn">⋯</div></div>
+      </div>
+      <div class="rc-name">mcp-agent-framework</div>
+      <div class="rc-desc">Build autonomous AI agents using <em>MCP protocol</em> with built-in tool orchestration, memory management, and multi-agent collaboration patterns.</div>
+      <div class="rc-tags"><span class="sc-tag">mcp</span><span class="sc-tag">agent</span><span class="sc-tag">framework</span><span class="sc-tag">orchestration</span></div>
+      <div class="rc-bottom">
+        <div class="rc-meta"><span>👤 agent-labs</span><span>·</span><span>3天前</span><span>·</span><span>⭐ 2.1k</span><span>·</span><span>🔄 45</span></div>
+        <div class="rc-rating"><span class="rc-stars">★★★★☆</span><span class="rc-score">4.1</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-card">
+    <div class="rel-bar low"></div>
+    <div class="rc-inner">
+      <div class="rc-top">
+        <div style="display:flex;align-items:center;gap:0.75rem">
+          <div class="rc-badges"><span class="sc-badge t">RAG</span><span class="sc-badge p">Go</span></div>
+          <div class="rc-source"><span class="rc-source-dot"></span> GitHub · 社区</div>
+        </div>
+        <div class="rc-actions"><div class="rc-act-btn fav">♡</div><div class="rc-act-btn">⋯</div></div>
+      </div>
+      <div class="rc-name">mcp-knowledge-graph</div>
+      <div class="rc-desc">Knowledge graph <em>MCP server</em> that enables AI models to query and traverse graph-structured data with SPARQL-like query syntax and visualization.</div>
+      <div class="rc-tags"><span class="sc-tag">mcp</span><span class="sc-tag">knowledge-graph</span><span class="sc-tag">sparql</span></div>
+      <div class="rc-bottom">
+        <div class="rc-meta"><span>👤 graph-dev</span><span>·</span><span>2周前</span><span>·</span><span>⭐ 890</span><span>·</span><span>🔄 23</span></div>
+        <div class="rc-rating"><span class="rc-stars">★★★☆☆</span><span class="rc-score">3.6</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="sr-pagination">
+    <div class="pg-btn">←</div>
+    <div class="pg-btn active">1</div>
+    <div class="pg-btn">2</div>
+    <div class="pg-btn">3</div>
+    <div class="pg-dots">···</div>
+    <div class="pg-btn">8</div>
+    <div class="pg-btn">→</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PAGE 3: SKILL DETAIL
+     ═══════════════════════════════════════════════════════════ -->
+<div class="neural-bridge">
+  <div class="bridge-node"></div><div class="bridge-node"></div><div class="bridge-node"></div><div class="bridge-node"></div>
+  <div class="bridge-label">PAGE 3 — SKILL DETAIL</div>
+</div>
+
+<div class="detail-layout">
+  <div>
+    <div class="breadcrumb"><a href="#">首页</a><span class="bc-sep">/</span><a href="#">MCP Servers</a><span class="bc-sep">/</span><span class="bc-cur">awesome-mcp-servers</span></div>
+    <div class="d-name">awesome-mcp-servers</div>
+    <div class="d-desc">A curated list of awesome Model Context Protocol servers. Discover the best MCP servers for building AI-powered applications with seamless tool integration and context management.</div>
+    <div class="d-badges">
+      <span class="d-badge" style="background:rgba(0,240,255,0.08);color:var(--cyan);border:1px solid rgba(0,240,255,0.12)">MCP Server</span>
+      <span class="d-badge" style="background:rgba(139,92,246,0.08);color:var(--violet);border:1px solid rgba(139,92,246,0.12)">TypeScript</span>
+      <span class="d-badge" style="background:rgba(16,185,129,0.08);color:var(--emerald);border:1px solid rgba(16,185,129,0.12)">MIT License</span>
+      <span class="d-badge" style="background:rgba(255,255,255,0.03);color:var(--text-mid);border:1px solid rgba(255,255,255,0.05)">GitHub</span>
+    </div>
+    <div class="d-stats">
+      <div class="d-stat"><div class="d-stat-v">12.5k</div><div class="d-stat-l">Stars</div></div>
+      <div class="d-stat"><div class="d-stat-v">4.8</div><div class="d-stat-l">评分</div></div>
+      <div class="d-stat"><div class="d-stat-v">892</div><div class="d-stat-l">收藏</div></div>
+      <div class="d-stat"><div class="d-stat-v">156</div><div class="d-stat-l">Forks</div></div>
+    </div>
+    <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.4rem">
+      <span style="color:var(--cyan)">⌨</span> 安装
+    </h3>
+    <div class="code-block">
+      <div class="code-dots"><span></span><span></span><span></span></div>
+      <span class="cm"># Install via npm</span><br>
+      <span class="cmd">npm</span> install awesome-mcp-servers<br><br>
+      <span class="cm"># Or clone from GitHub</span><br>
+      <span class="cmd">git</span> clone <span class="st">https://github.com/example/awesome-mcp-servers.git</span><br>
+      <span class="cmd">cd</span> awesome-mcp-servers<br>
+      <span class="cmd">npm</span> install <span class="fl">--production</span>
+    </div>
+    <h3 style="font-size:0.95rem;font-weight:700;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.4rem">
+      <span style="color:var(--amber)">★</span> 评价 (24)
+    </h3>
+    <div class="review">
+      <div class="rv-head"><div class="rv-user"><div class="rv-avatar"></div><div><div class="rv-name">Alex Chen</div><div class="rv-time">2天前</div></div></div><div class="rv-stars">★★★★★</div></div>
+      <div class="rv-text">Excellent collection of MCP servers! The documentation is clear and the examples are very helpful for getting started quickly.</div>
+    </div>
+    <div class="review">
+      <div class="rv-head"><div class="rv-user"><div class="rv-avatar" style="background:linear-gradient(135deg,var(--violet),var(--magenta))"></div><div><div class="rv-name">Sarah Wang</div><div class="rv-time">1周前</div></div></div><div class="rv-stars">★★★★☆</div></div>
+      <div class="rv-text">Great resource for MCP development. Would love to see more server implementations for database connections.</div>
+    </div>
+  </div>
+  <div class="sidebar">
+    <div class="sb-card">
+      <div class="sb-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> 相关技能</div>
+      <div class="rel-item"><div class="rel-icon">🔗</div><div><div class="rel-name">mcp-file-system</div><div class="rel-desc">File system MCP server for AI models</div></div></div>
+      <div class="rel-item"><div class="rel-icon">🌐</div><div><div class="rel-name">mcp-web-browser</div><div class="rel-desc">Web browsing with headless browser</div></div></div>
+      <div class="rel-item"><div class="rel-icon">🤖</div><div><div class="rel-name">mcp-agent-framework</div><div class="rel-desc">Build autonomous AI agents with MCP</div></div></div>
+      <div class="rel-item"><div class="rel-icon">📊</div><div><div class="rel-name">mcp-data-connector</div><div class="rel-desc">Database MCP server with query builder</div></div></div>
+    </div>
+    <div class="sb-card">
+      <div class="sb-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> 快捷操作</div>
+      <div style="display:flex;flex-direction:column;gap:0.4rem">
+        <button style="width:100%;padding:0.6rem;border-radius:10px;border:none;background:linear-gradient(135deg,var(--cyan),var(--violet));color:#fff;font-weight:700;cursor:pointer;font-size:0.8rem;box-shadow:0 0 20px rgba(0,240,255,0.15);transition:all 0.3s">♥ 添加收藏</button>
+        <button style="width:100%;padding:0.6rem;border-radius:10px;border:1px solid rgba(0,240,255,0.12);background:rgba(0,240,255,0.04);color:var(--cyan);cursor:pointer;font-size:0.8rem;transition:all 0.3s">↗ 访问 GitHub</button>
+        <button style="width:100%;padding:0.6rem;border-radius:10px;border:1px solid rgba(255,255,255,0.05);background:transparent;color:var(--text-mid);cursor:pointer;font-size:0.8rem;transition:all 0.3s">↗ 分享</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PAGE 4: RANKING
+     ═══════════════════════════════════════════════════════════ -->
+<div class="neural-bridge">
+  <div class="bridge-node"></div><div class="bridge-node"></div><div class="bridge-node"></div><div class="bridge-node"></div>
+  <div class="bridge-label">PAGE 4 — LEADERBOARD</div>
+</div>
+
+<div style="max-width:1200px;margin:0 auto;padding:0 2rem">
+  <h1 style="font-size:2rem;font-weight:900;letter-spacing:-0.03em;margin-bottom:1.25rem;
+    background:linear-gradient(135deg,var(--cyan),var(--violet),var(--magenta));-webkit-background-clip:text;-webkit-text-fill-color:transparent">
+    🏆 排行榜
+  </h1>
+  <div class="tabs">
+    <div class="tab active">🔥 热门</div>
+    <div class="tab">⭐ 最高评分</div>
+    <div class="tab">🆕 最新</div>
+    <div class="tab">📈 趋势</div>
+  </div>
+  <div class="rank-list">
+    <div class="rank-item"><div class="rank-n rn-1">1</div><div class="rank-info"><div class="rank-name">awesome-mcp-servers</div><div class="rank-desc">A curated list of awesome Model Context Protocol servers for AI applications.</div></div><div class="rank-meta"><span>★ 4.8</span><span>⭐ 12.5k</span></div></div>
+    <div class="rank-item"><div class="rank-n rn-2">2</div><div class="rank-info"><div class="rank-name">langchain-tools</div><div class="rank-desc">Comprehensive toolkit for building LangChain-based AI agents.</div></div><div class="rank-meta"><span>★ 4.5</span><span>⭐ 8.2k</span></div></div>
+    <div class="rank-item"><div class="rank-n rn-3">3</div><div class="rank-info"><div class="rank-name">vector-search-engine</div><div class="rank-desc">High-performance vector search engine optimized for RAG pipelines.</div></div><div class="rank-meta"><span>★ 4.3</span><span>⭐ 6.7k</span></div></div>
+    <div class="rank-item"><div class="rank-n rn-x">4</div><div class="rank-info"><div class="rank-name">ai-code-reviewer</div><div class="rank-desc">AI-powered code review tool with intelligent suggestions.</div></div><div class="rank-meta"><span>★ 4.1</span><span>⭐ 5.3k</span></div></div>
+    <div class="rank-item"><div class="rank-n rn-x">5</div><div class="rank-info"><div class="rank-name">smart-data-cleaner</div><div class="rank-desc">Automated data cleaning with ML-powered anomaly detection.</div></div><div class="rank-meta"><span>★ 4.0</span><span>⭐ 4.8k</span></div></div>
+    <div class="rank-item"><div class="rank-n rn-x">6</div><div class="rank-info"><div class="rank-name">rest-api-builder</div><div class="rank-desc">Auto-generate REST APIs from natural language descriptions.</div></div><div class="rank-meta"><span>★ 3.8</span><span>⭐ 3.9k</span></div></div>
+    <div class="rank-item"><div class="rank-n rn-x">7</div><div class="rank-info"><div class="rank-name">mcp-file-system</div><div class="rank-desc">File system MCP server for secure AI file operations.</div></div><div class="rank-meta"><span>★ 4.5</span><span>⭐ 3.5k</span></div></div>
+    <div class="rank-item"><div class="rank-n rn-x">8</div><div class="rank-info"><div class="rank-name">prompt-optimizer</div><div class="rank-desc">Optimize LLM prompts for better performance and accuracy.</div></div><div class="rank-meta"><span>★ 3.7</span><span>⭐ 2.1k</span></div></div>
+  </div>
+</div>
+
+</div><!-- /content-wrap -->
+
+<!-- ═══════════════════════════════════════════════════════════
+     NEURAL NETWORK CANVAS — Real-time Synapse Visualization
+     ═══════════════════════════════════════════════════════════ -->
+<script>
+(function(){
+  const canvas = document.getElementById('neural-bg');
+  const ctx = canvas.getContext('2d');
+  let W, H, nodes = [], mouse = {x: -999, y: -999};
+  const NODE_COUNT = 50;
+  const CONNECT_DIST = 200;
+  const MOUSE_RADIUS = 180;
+
+  function resize(){
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = document.documentElement.scrollHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Re-measure height on scroll for dynamic content
+  let resizeTimer;
+  window.addEventListener('scroll', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(resize, 200);
+  });
+
+  document.addEventListener('mousemove', e => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY + window.scrollY;
+  });
+
+  class NeuralNode {
+    constructor(){
+      this.x = Math.random() * W;
+      this.y = Math.random() * H;
+      this.vx = (Math.random() - 0.5) * 0.4;
+      this.vy = (Math.random() - 0.5) * 0.4;
+      this.radius = Math.random() * 2 + 1;
+      this.baseRadius = this.radius;
+      this.pulsePhase = Math.random() * Math.PI * 2;
+      this.pulseSpeed = 0.02 + Math.random() * 0.02;
+      // Each node has a "type" that determines its color
+      const r = Math.random();
+      if(r < 0.4) this.color = {r:0, g:240, b:255};       // cyan
+      else if(r < 0.7) this.color = {r:139, g:92, b:246};  // violet
+      else if(r < 0.9) this.color = {r:236, g:72, b:153};  // magenta
+      else this.color = {r:16, g:185, b:129};               // emerald
+      this.activation = 0; // 0-1, how "active" the node is
+    }
+    update(){
+      this.x += this.vx;
+      this.y += this.vy;
+      this.pulsePhase += this.pulseSpeed;
+
+      // Mouse interaction — nodes are attracted slightly, then repelled when too close
+      const dx = mouse.x - this.x;
+      const dy = mouse.y - this.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if(dist < MOUSE_RADIUS && dist > 0){
+        const force = (MOUSE_RADIUS - dist) / MOUSE_RADIUS;
+        if(dist > 60){
+          // Gentle attraction
+          this.vx += (dx / dist) * force * 0.008;
+          this.vy += (dy / dist) * force * 0.008;
+        } else {
+          // Repulsion when too close
+          this.vx -= (dx / dist) * force * 0.03;
+          this.vy -= (dy / dist) * force * 0.03;
+        }
+        this.activation = Math.min(1, this.activation + 0.05);
+      } else {
+        this.activation = Math.max(0, this.activation - 0.01);
+      }
+
+      // Damping
+      this.vx *= 0.99;
+      this.vy *= 0.99;
+
+      // Bounds
+      if(this.x < 0 || this.x > W) this.vx *= -1;
+      if(this.y < 0 || this.y > H) this.vy *= -1;
+      this.x = Math.max(0, Math.min(W, this.x));
+      this.y = Math.max(0, Math.min(H, this.y));
+
+      // Pulse radius
+      this.radius = this.baseRadius + Math.sin(this.pulsePhase) * 0.5 + this.activation * 2;
+    }
+    draw(){
+      const alpha = 0.3 + this.activation * 0.5;
+      const {r,g,b} = this.color;
+      // Glow
+      if(this.activation > 0.1){
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius * 4, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${r},${g},${b},${this.activation * 0.08})`;
+        ctx.fill();
+      }
+      // Core
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+      ctx.fill();
+    }
+  }
+
+  for(let i = 0; i < NODE_COUNT; i++) nodes.push(new NeuralNode());
+
+  // Data pulses that travel along connections
+  let pulses = [];
+  class Pulse {
+    constructor(fromNode, toNode){
+      this.from = fromNode;
+      this.to = toNode;
+      this.t = 0;
+      this.speed = 0.01 + Math.random() * 0.02;
+      const r = Math.random();
+      if(r < 0.5) this.color = '0,240,255';
+      else if(r < 0.8) this.color = '139,92,246';
+      else this.color = '236,72,153';
+    }
+    update(){
+      this.t += this.speed;
+      return this.t < 1;
+    }
+    draw(){
+      const x = this.from.x + (this.to.x - this.from.x) * this.t;
+      const y = this.from.y + (this.to.y - this.from.y) * this.t;
+      const alpha = Math.sin(this.t * Math.PI) * 0.8;
+      ctx.beginPath();
+      ctx.arc(x, y, 2, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${this.color},${alpha})`;
+      ctx.fill();
+      // Trail
+      ctx.beginPath();
+      ctx.arc(x, y, 5, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${this.color},${alpha * 0.2})`;
+      ctx.fill();
+    }
+  }
+
+  let frameCount = 0;
+  function animate(){
+    ctx.clearRect(0, 0, W, H);
+    frameCount++;
+
+    // Update & draw connections
+    for(let i = 0; i < nodes.length; i++){
+      for(let j = i + 1; j < nodes.length; j++){
+        const dx = nodes[i].x - nodes[j].x;
+        const dy = nodes[i].y - nodes[j].y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if(dist < CONNECT_DIST){
+          const alpha = (1 - dist / CONNECT_DIST) * 0.08;
+          const activation = Math.max(nodes[i].activation, nodes[j].activation);
+          const finalAlpha = alpha + activation * 0.12;
+
+          // Connection line with gradient
+          const grad = ctx.createLinearGradient(nodes[i].x, nodes[i].y, nodes[j].x, nodes[j].y);
+          const ci = nodes[i].color, cj = nodes[j].color;
+          grad.addColorStop(0, `rgba(${ci.r},${ci.g},${ci.b},${finalAlpha})`);
+          grad.addColorStop(1, `rgba(${cj.r},${cj.g},${cj.b},${finalAlpha})`);
+          ctx.beginPath();
+          ctx.moveTo(nodes[i].x, nodes[i].y);
+          ctx.lineTo(nodes[j].x, nodes[j].y);
+          ctx.strokeStyle = grad;
+          ctx.lineWidth = 0.5 + activation * 1;
+          ctx.stroke();
+
+          // Randomly spawn pulses on active connections
+          if(activation > 0.3 && Math.random() < 0.005){
+            pulses.push(new Pulse(nodes[i], nodes[j]));
+          }
+        }
+      }
+    }
+
+    // Update & draw nodes
+    nodes.forEach(n => { n.update(); n.draw(); });
+
+    // Update & draw pulses
+    pulses = pulses.filter(p => {
+      const alive = p.update();
+      if(alive) p.draw();
+      return alive;
+    });
+
+    // Limit pulses
+    if(pulses.length > 100) pulses = pulses.slice(-80);
+
+    requestAnimationFrame(animate);
+  }
+  animate();
+
+  // ═══ CARD MOUSE TRACKING ═══
+  document.querySelectorAll('.skill-card').forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const rect = card.getBoundingClientRect();
+      card.style.setProperty('--mx', (e.clientX - rect.left) + 'px');
+      card.style.setProperty('--my', (e.clientY - rect.top) + 'px');
+    });
+  });
+
+  // ═══ SCROLL REVEAL ═══
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        entry.target.classList.add('visible');
+      }
+    });
+  }, {threshold: 0.1, rootMargin: '0px 0px -50px 0px'});
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // ═══ COUNTER ANIMATION ═══
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        const el = entry.target;
+        const target = parseInt(el.dataset.target);
+        let current = 0;
+        const increment = target / 60;
+        const timer = setInterval(() => {
+          current += increment;
+          if(current >= target){
+            current = target;
+            clearInterval(timer);
+          }
+          el.textContent = Math.floor(current).toLocaleString();
+        }, 16);
+        counterObserver.unobserve(el);
+      }
+    });
+  }, {threshold: 0.5});
+  document.querySelectorAll('.live-stat-val').forEach(el => counterObserver.observe(el));
+
+  // ═══ TAB SWITCHING ═══
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', function(){
+      this.parentElement.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  // ═══ FILTER TOGGLE ═══
+  document.querySelectorAll('.fi').forEach(item => {
+    item.addEventListener('click', function(){
+      const cb = this.querySelector('.fi-cb');
+      cb.classList.toggle('on');
+    });
+  });
+
+  // ═══ FAVORITE TOGGLE ═══
+  document.querySelectorAll('.sc-fav').forEach(btn => {
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      this.classList.toggle('on');
+      this.textContent = this.classList.contains('on') ? '♥' : '♡';
+    });
+  });
+
+  // ═══ LANG SWITCH ═══
+  document.querySelectorAll('.lang-opt').forEach(btn => {
+    btn.addEventListener('click', function(){
+      this.parentElement.querySelectorAll('.lang-opt').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  // ═══ HOLOGRAPHIC ANGLE (CSS @property fallback) ═══
+  let holoAngle = 0;
+  function updateHolo(){
+    holoAngle = (holoAngle + 0.5) % 360;
+    document.querySelectorAll('.skill-card, .result-card').forEach(card => {
+      card.style.setProperty('--holo-angle', holoAngle + 'deg');
+    });
+    requestAnimationFrame(updateHolo);
+  }
+  updateHolo();
+
+  // ═══ THEME TOGGLE ═══
+  const themeToggle = document.getElementById('themeToggle');
+  let currentTheme = 'dark';
+  themeToggle.addEventListener('click', () => {
+    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    if(currentTheme === 'light'){
+      document.documentElement.setAttribute('data-theme', 'light');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+  });
+
+  // ═══ AI INSIGHT CHIP TOGGLE ═══
+  document.querySelectorAll('.ai-insight-chip').forEach(chip => {
+    chip.addEventListener('click', function(){
+      // Don't toggle "更多筛选" chip
+      if(this.querySelector('.chip-text').textContent === '更多筛选') return;
+      this.parentElement.querySelectorAll('.ai-insight-chip:not(:last-child)').forEach(c => c.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  // ═══ RESULT CARD MOUSE TRACKING ═══
+  document.querySelectorAll('.result-card').forEach(card => {
+    card.addEventListener('mousemove', e => {
+      const rect = card.getBoundingClientRect();
+      card.style.setProperty('--mx', (e.clientX - rect.left) + 'px');
+      card.style.setProperty('--my', (e.clientY - rect.top) + 'px');
+    });
+  });
+
+  // ═══ VIEW TOGGLE ═══
+  document.querySelectorAll('.sr-view-btn').forEach(btn => {
+    btn.addEventListener('click', function(){
+      this.parentElement.querySelectorAll('.sr-view-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  // ═══ RESULT FAVORITE TOGGLE ═══
+  document.querySelectorAll('.rc-act-btn.fav').forEach(btn => {
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      this.classList.toggle('on');
+      this.textContent = this.classList.contains('on') ? '♥' : '♡';
+    });
+  });
+
+  // ═══ PAGINATION ═══
+  document.querySelectorAll('.pg-btn').forEach(btn => {
+    btn.addEventListener('click', function(){
+      if(this.textContent === '←' || this.textContent === '→') return;
+      this.parentElement.querySelectorAll('.pg-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>
