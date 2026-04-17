@@ -25,7 +25,7 @@
 - 🐳 **Docker 一键部署** — 6 个服务容器编排（PG / ES / Redis / Backend / Frontend / Nginx），也支持本地开发模式
 - 👤 **完整用户系统** — JWT 认证、收藏、评价、个人中心、管理后台
 - 📊 **排行榜系统** — 热门 / 最高评分 / 最新 / 趋势 四维排序
-- 💰 **商业化预留** — 会员体系、付费技能、开发者账户、收益记录等完整商业化数据模型
+- 💰 **商业化预留** — 会员体系、付费工具、开发者账户、收益记录等完整商业化数据模型
 
 ## 🏗️ 架构概览
 
@@ -72,9 +72,9 @@ AI-Tools-Hub/
 ├── frontend/                    # Next.js 前端
 │   ├── src/
 │   │   ├── app/                 # App Router 页面
-│   │   │   ├── page.tsx         # 首页 (HeroSearch + CategoryGrid + 热门技能)
+│   │   │   ├── page.tsx         # 首页 (HeroSearch + CategoryGrid + 热门工具)
 │   │   │   ├── search/          # 搜索页
-│   │   │   ├── skills/[id]/     # 技能详情页
+│   │   │   ├── tools/[id]/       # 工具详情页
 │   │   │   ├── categories/      # 分类浏览页
 │   │   │   ├── ranking/         # 排行榜页
 │   │   │   ├── favorites/       # 收藏页
@@ -83,10 +83,10 @@ AI-Tools-Hub/
 │   │   │   ├── profile/         # 个人中心
 │   │   │   └── admin/crawl/     # 采集管理后台
 │   │   ├── components/
-│   │   │   ├── home/            # HeroSearch, SkillCard, CategoryGrid
+│   │   │   ├── home/            # HeroSearch, ToolCard, CategoryGrid
 │   │   │   ├── layout/          # Header, Footer, NeuralBackground
 │   │   │   ├── search/          # SearchBar, FilterPanel, ResultList
-│   │   │   ├── skill/           # ReviewForm, ReviewList
+│   │   │   ├── tool/            # ReviewForm, ReviewList
 │   │   │   └── ui/              # shadcn/ui 基础组件
 │   │   ├── lib/                 # API 封装、类型定义、工具函数
 │   │   └── store/               # Zustand 状态管理
@@ -94,7 +94,7 @@ AI-Tools-Hub/
 │
 ├── backend/                     # FastAPI 后端
 │   ├── app/
-│   │   ├── api/v1/              # API 路由 (auth/skills/search/recommend/crawl/...)
+│   │   ├── api/v1/              # API 路由 (auth/tools/search/recommend/crawl/...)
 │   │   ├── core/                # 配置、数据库、安全、中间件
 │   │   ├── crawlers/            # GitHub/Gitee 数据采集器 (工厂模式)
 │   │   ├── models/              # SQLAlchemy ORM 模型
@@ -173,7 +173,7 @@ EMBEDDING_PROVIDER=siliconcloud    # siliconcloud / local
 SILICONCLOUD_EMBEDDING_MODEL=BAAI/bge-m3-v1
 
 # ===== 数据库 =====
-DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:15432/ai_skills_hub
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:15432/ai_tools_hub
 
 # ===== Elasticsearch =====
 ELASTICSEARCH_URL=http://localhost:19200
@@ -201,7 +201,7 @@ JWT_EXPIRE_MINUTES=10080           # 7 天
 - ES 不可用时自动降级到 PostgreSQL LIKE 模糊匹配
 
 ### 2. LLM 智能推荐
-- 用户自然语言查询 → LLM 意图分析（提取关键词/技能类型/分类）→ 智能搜索 → 推荐 + 推荐理由
+- 用户自然语言查询 → LLM 意图分析（提取关键词/工具类型/分类）→ 智能搜索 → 推荐 + 推荐理由
 - 5 大 LLM Provider 一键切换，统一接口适配
 - LLM 失败自动降级为关键词搜索
 
@@ -250,8 +250,8 @@ JWT_EXPIRE_MINUTES=10080           # 7 天
 |------|------|
 | `POST /api/v1/auth/register` | 用户注册 |
 | `POST /api/v1/auth/login` | 用户登录 |
-| `GET /api/v1/skills` | 技能列表 |
-| `GET /api/v1/skills/{id}` | 技能详情 |
+| `GET /api/v1/tools` | 工具列表 |
+| `GET /api/v1/tools/{id}` | 工具详情 |
 | `GET /api/v1/search` | 全文搜索 |
 | `GET /api/v1/search/suggestions` | 搜索建议 |
 | `POST /api/v1/recommend` | LLM 智能推荐 |
